@@ -11,7 +11,7 @@ const { exec, execSync } = require('child_process')
 let uping = false
 
 export class update extends plugin {
-  constructor() {
+  constructor () {
     super({
       name: '更新',
       dsc: '#更新 #强制更新',
@@ -19,11 +19,11 @@ export class update extends plugin {
       priority: 4000,
       rule: [
         {
-          reg: '^#更新日志',
+          reg: '^#更新日志$',
           fnc: 'updateLog'
         },
         {
-          reg: '^#(强制)?更新',
+          reg: '^#(强制)*更新(.*)',
           fnc: 'update'
         },
         {
@@ -37,15 +37,22 @@ export class update extends plugin {
     this.typeName = 'Yunzai-Bot'
   }
 
-  async update() {
+  async update () {
     if (!this.e.isMaster) return false
-    if (uping) return this.reply('已有命令更新中..请勿重复操作')
+    if (uping) {
+      await this.reply('已有命令更新中..请勿重复操作')
+      return
+    }
 
     if (/详细|详情|面板|面版/.test(this.e.msg)) return false
 
     /** 获取插件 */
-    const plugin = this.getPlugin()
+    let plugin = this.getPlugin()
+
     if (plugin === false) return false
+
+    /** 检查git安装 */
+    if (!await this.checkGit()) return
 
     /** 执行更新 */
     await this.runUpdate(plugin)
@@ -57,9 +64,19 @@ export class update extends plugin {
     }
   }
 
-  getPlugin(plugin = '') {
+  async checkGit () {
+    let ret = await execSync('git --version', { encoding: 'utf-8' })
+    if (!ret || !ret.includes('git version')) {
+      await this.reply('请先安装git')
+      return false
+    }
+
+    return true
+  }
+
+  getPlugin (plugin = '') {
     if (!plugin) {
-      plugin = this.e.msg.replace(/#(强制)?更新(日志)?/, '')
+      plugin = this.e.msg.replace(/#|更新|强制/g, '')
       if (!plugin) return ''
     }
 
@@ -69,7 +86,7 @@ export class update extends plugin {
     return plugin
   }
 
-  async execSync(cmd) {
+  async execSync (cmd) {
     return new Promise((resolve, reject) => {
       exec(cmd, { windowsHide: true }, (error, stdout, stderr) => {
         resolve({ error, stdout, stderr })
@@ -77,7 +94,7 @@ export class update extends plugin {
     })
   }
 
-  async runUpdate(plugin = '') {
+  async runUpdate (plugin = '') {
     this.isNowUp = false
 
     let cm = 'git pull --no-rebase'
@@ -87,15 +104,21 @@ export class update extends plugin {
       type = '强制更新'
       cm = `git reset --hard && git pull --rebase --allow-unrelated-histories`
     }
-    if (plugin) cm = `cd "plugins/${plugin}" && ${cm}`
+
+    if (plugin) {
+      if (type == '强制更新')
+        cm = `cd "plugins/${plugin}" && git reset --hard && git pull --rebase --allow-unrelated-histories`
+      else
+        cm = `cd "plugins/${plugin}" && git pull --no-rebase`
+    }
 
     this.oldCommitId = await this.getcommitId(plugin)
 
     logger.mark(`${this.e.logFnc} 开始${type}：${this.typeName}`)
 
-    await this.reply(`开始${type} ${this.typeName}`)
+    await this.reply(`开始#${type}${this.typeName}`)
     uping = true
-    const ret = await this.execSync(cm)
+    let ret = await this.execSync(cm)
     uping = false
 
     if (ret.error) {
@@ -104,31 +127,39 @@ export class update extends plugin {
       return false
     }
 
-    const time = await this.getTime(plugin)
+    let time = await this.getTime(plugin)
 
     if (/Already up|已经是最新/g.test(ret.stdout)) {
-      await this.reply(`${this.typeName} 已是最新\n最后更新时间：${time}`)
+      await this.reply(`${this.typeName}已经是最新\n最后更新时间：${time}`)
     } else {
-      await this.reply(`${this.typeName} 更新成功\n更新时间：${time}`)
+      await this.reply(`${this.typeName}更新成功\n更新时间：${time}`)
       this.isUp = true
-      await this.reply(await this.getLog(plugin))
+      let log = await this.getLog(plugin)
+      await this.reply(log)
     }
 
     logger.mark(`${this.e.logFnc} 最后更新时间：${time}`)
+
     return true
   }
 
-  async getcommitId(plugin = '') {
+  async getcommitId (plugin = '') {
     let cm = 'git rev-parse --short HEAD'
-    if (plugin) cm = `cd "plugins/${plugin}" && ${cm}`
+    if (plugin) {
+      cm = `cd "plugins/${plugin}" && git rev-parse --short HEAD`
+    }
 
-    const commitId = await execSync(cm, { encoding: 'utf-8' })
-    return lodash.trim(commitId)
+    let commitId = await execSync(cm, { encoding: 'utf-8' })
+    commitId = lodash.trim(commitId)
+
+    return commitId
   }
 
-  async getTime(plugin = '') {
-    let cm = 'git log -1 --pretty=%cd --date=format:"%F %T"'
-    if (plugin) cm = `cd "plugins/${plugin}" && ${cm}`
+  async getTime (plugin = '') {
+    let cm = 'git log -1 --pretty=format:"%cd" --date=format:"%F %T"'
+    if (plugin) {
+      cm = `cd "plugins/${plugin}" && git log -1 --pretty=format:"%cd" --date=format:"%F %T"`
+    }
 
     let time = ''
     try {
@@ -142,34 +173,38 @@ export class update extends plugin {
     return time
   }
 
-  async gitErr(err, stdout) {
-    const msg = '更新失败！'
-    const errMsg = err.toString()
+  async gitErr (err, stdout) {
+    let msg = '更新失败！'
+    let errMsg = err.toString()
     stdout = stdout.toString()
 
     if (errMsg.includes('Timed out')) {
-      const remote = errMsg.match(/'(.+?)'/g)[0].replace(/'/g, '')
-      return this.reply(`${msg}\n连接超时：${remote}`)
+      let remote = errMsg.match(/'(.+?)'/g)[0].replace(/'/g, '')
+      await this.reply(msg + `\n连接超时：${remote}`)
+      return
     }
 
     if (/Failed to connect|unable to access/g.test(errMsg)) {
-      const remote = errMsg.match(/'(.+?)'/g)[0].replace(/'/g, '')
-      return this.reply(`${msg}\n连接失败：${remote}`)
+      let remote = errMsg.match(/'(.+?)'/g)[0].replace(/'/g, '')
+      await this.reply(msg + `\n连接失败：${remote}`)
+      return
     }
 
     if (errMsg.includes('be overwritten by merge')) {
-      return this.reply(`${msg}\n存在冲突：\n${errMsg}\n请解决冲突后再更新，或者执行#强制更新，放弃本地修改`)
+      await this.reply(msg + `存在冲突：\n${errMsg}\n` + '请解决冲突后再更新，或者执行#强制更新，放弃本地修改')
+      return
     }
 
     if (stdout.includes('CONFLICT')) {
-      return this.reply(`${msg}\n存在冲突：\n${errMsg}${stdout}\n请解决冲突后再更新，或者执行#强制更新，放弃本地修改`)
+      await this.reply([msg + '存在冲突\n', errMsg, stdout, '\n请解决冲突后再更新，或者执行#强制更新，放弃本地修改'])
+      return
     }
 
-    return this.reply([errMsg, stdout])
+    await this.reply([errMsg, stdout])
   }
 
-  async updateAll() {
-    const dirs = fs.readdirSync('./plugins/')
+  async updateAll () {
+    let dirs = fs.readdirSync('./plugins/')
 
     await this.runUpdate()
 
@@ -186,25 +221,27 @@ export class update extends plugin {
     }
   }
 
-  restart() {
+  restart () {
     new Restart(this.e).restart()
   }
 
-  async getLog(plugin = '') {
-    let cm = 'git log -100 --pretty="%h||[%cd] %s" --date=format:"%F %T"'
-    if (plugin) cm = `cd "plugins/${plugin}" && ${cm}`
+  async getLog (plugin = '') {
+    let cm = 'git log -20 --pretty=format:"%h||[%cd] %s" --date=format:"%F %T"'
+    if (plugin) {
+      cm = `cd "plugins/${plugin}" && ${cm}`
+    }
 
     let logAll
     try {
       logAll = await execSync(cm, { encoding: 'utf-8' })
     } catch (error) {
       logger.error(error.toString())
-      await this.reply(error.toString())
+      this.reply(error.toString())
     }
 
     if (!logAll) return false
 
-    logAll = logAll.trim().split('\n')
+    logAll = logAll.split('\n')
 
     let log = []
     for (let str of logAll) {
@@ -218,23 +255,19 @@ export class update extends plugin {
 
     if (log.length <= 0) return ''
 
-    let end = ''
-    try {
-      cm = 'git config -l'
-      if (plugin) cm = `cd "plugins/${plugin}" && ${cm}`
-      end = await execSync(cm, { encoding: 'utf-8' })
-      end = end.match(/remote\..*\.url=.+/g).join('\n\n').replace(/remote\..*\.url=/g, '')
-    } catch (error) {
-      logger.error(error.toString())
-      await this.reply(error.toString())
+    let title = `${plugin || 'Yunzai-Bot'}更新日志，共${line}条`
+    if (!plugin) {
+      let end = '更多详细信息，请前往gitee查看\nhttps://gitee.com/yoimiya-kokomi/Yunzai-Bot/edit/main/'
+      log = await common.makeForwardMsg(this.e, [title, log, end], title)
+    }else {
+      log = await common.makeForwardMsg(this.e, [title, log], title)
     }
 
-    return common.makeForwardMsg(this.e, [log, end], `${plugin || 'Yunzai-Bot'} 更新日志，共${line}条`)
+    return log
   }
 
-  async updateLog() {
-    const plugin = this.getPlugin()
-    if (plugin === false) return false
-    return this.reply(await this.getLog(plugin))
+  async updateLog () {
+    let log = await this.getLog()
+    await this.reply(log)
   }
 }

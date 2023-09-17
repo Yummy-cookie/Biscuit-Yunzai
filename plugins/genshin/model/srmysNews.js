@@ -254,13 +254,13 @@ export default class MysNews extends base {
     return emp
   }
 
-  async replyMsg (img, titile) {
+  async replyMsg (img, title) {
     if (!img || img.length <= 0) return false
-    if (img.length == 1) {
+    if (img.length === 1) {
       return img[0]
     } else {
-      let msg = [titile, ...img]
-      return await common.makeForwardMsg(this.e, msg, titile).catch((err) => {
+      let msg = [title, ...img]
+      return await common.makeForwardMsg(this.e, msg, title).catch((err) => {
         logger.error(err)
       })
     }
@@ -330,7 +330,7 @@ export default class MysNews extends base {
     }
 
     this.pushGroup[groupId]++
-    this.e.group = Bot.pickGroup(Number(groupId))
+    this.e.group = this.e.bot.pickGroup(Number(groupId))
     this.e.group_id = Number(groupId)
     let tmp = await this.replyMsg(this[postId].img, `崩坏星穹铁道${typeName}推送：${this[postId].title}`)
 
