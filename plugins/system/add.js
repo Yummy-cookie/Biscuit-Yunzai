@@ -1,6 +1,6 @@
-
 import cfg from '../../lib/config/config.js'
 import plugin from '../../lib/plugins/plugin.js'
+import common from '../../lib/common/common.js'
 import fs from 'node:fs'
 import lodash from 'lodash'
 import { pipeline } from 'stream'
@@ -11,7 +11,7 @@ import moment from 'moment'
 let textArr = {}
 
 export class add extends plugin {
-  constructor () {
+  constructor() {
     super({
       name: '添加表情',
       dsc: '添加表情，文字等',
@@ -44,7 +44,7 @@ export class add extends plugin {
     this.isGlobal = false
   }
 
-  async init () {
+  async init() {
     if (!fs.existsSync(this.path)) {
       fs.mkdirSync(this.path)
     }
@@ -53,7 +53,7 @@ export class add extends plugin {
     }
   }
 
-  async accept () {
+  async accept() {
     /** 处理消息 */
     if (this.e.atBot && this.e.msg && this.e?.msg.includes('添加') && !this.e?.msg.includes('#')) {
       this.e.msg = '#' + this.e.msg
@@ -61,12 +61,12 @@ export class add extends plugin {
   }
 
   /** 群号key */
-  get grpKey () {
+  get grpKey() {
     return `Yz:group_id:${this.e.user_id}`
   }
 
   /** #添加 */
-  async add () {
+  async add() {
     this.isGlobal = this.e?.msg.includes("全局");
     await this.getGroupId()
 
@@ -94,14 +94,13 @@ export class add extends plugin {
   }
 
   /** 获取群号 */
-  async getGroupId () {
-    
+  async getGroupId() {
     /** 添加全局表情，存入到机器人qq文件中 */
     if (this.isGlobal) {
-      this.group_id = Bot.uin;
-      return Bot.uin;
+      this.group_id = this.e.bot.uin;
+      return this.e.bot.uin;
     }
-    
+
     if (this.e.isGroup) {
       this.group_id = this.e.group_id
       redis.setEx(this.grpKey, 3600 * 24 * 30, String(this.group_id))
@@ -118,7 +117,7 @@ export class add extends plugin {
     return false
   }
 
-  checkAuth () {
+  checkAuth() {
     if (this.e.isMaster) return true
 
     let groupCfg = cfg.getGroup(this.group_id)
@@ -127,10 +126,10 @@ export class add extends plugin {
       return false
     }
     if (groupCfg.imgAddLimit == 1) {
-      if (!Bot.gml.has(this.group_id)) {
+      if (!this.e.bot.gml.has(this.group_id)) {
         return false
       }
-      if (!Bot.gml.get(this.group_id).get(this.e.user_id)) {
+      if (!this.e.bot.gml.get(this.group_id).get(this.e.user_id)) {
         return false
       }
       if (!this.e.member.is_admin) {
@@ -147,14 +146,14 @@ export class add extends plugin {
     return true
   }
 
-  checkKeyWord () {
+  checkKeyWord() {
     if (this.e.img && this.e.img.length > 1) {
       this.e.reply('添加错误：只能发送一个表情当关键词')
       return false
     }
 
     if (this.e.at) {
-      let at = lodash.filter(this.e.message, (o) => { return o.type == 'at' && o.qq != Bot.uin })
+      let at = lodash.filter(this.e.message, (o) => { return o.type == 'at' && o.qq != this.e.bot.uin })
       if (at.length > 1) {
         this.e.reply('添加错误：只能@一个人当关键词')
         return false
@@ -170,7 +169,7 @@ export class add extends plugin {
   }
 
   /** 单独添加 */
-  async singleAdd () {
+  async singleAdd() {
     if (this.e.message.length != 2) return false
     let msg = lodash.keyBy(this.e.message, 'type')
     if (!this.e.msg || !msg.image) return false
@@ -193,7 +192,7 @@ export class add extends plugin {
   }
 
   /** 获取添加关键词 */
-  getKeyWord () {
+  getKeyWord() {
     this.e.isGlobal = this.e.msg.includes("全局");
 
     this.keyWord = this.e.toString()
@@ -201,7 +200,7 @@ export class add extends plugin {
       /** 过滤#添加 */
       .replace(/#|＃|图片|表情|添加|删除|全局/g, '')
       /** 过滤@ */
-      .replace(new RegExp('{at:' + Bot.uin + '}', 'g'), '')
+      .replace(new RegExp('{at:' + this.e.bot.uin + '}', 'g'), '')
       .trim()
 
     this.keyWord = this.trimAlias(this.keyWord)
@@ -213,7 +212,7 @@ export class add extends plugin {
   }
 
   /** 过滤别名 */
-  trimAlias (msg) {
+  trimAlias(msg) {
     let groupCfg = cfg.getGroup(this.group_id)
     let alias = groupCfg.botAlias
     if (!Array.isArray(alias)) {
@@ -229,7 +228,7 @@ export class add extends plugin {
   }
 
   /** 添加内容 */
-  async addContext () {
+  async addContext() {
     this.isGlobal = this.e.isGlobal || this.getContext()?.addContext?.isGlobal;
     await this.getGroupId()
     /** 关键词 */
@@ -244,7 +243,7 @@ export class add extends plugin {
 
     for (let i in message) {
       if (message[i].type == 'at') {
-        if (message[i].qq == Bot.uin) {
+        if (message[i].qq == this.e.bot.uin) {
           this.e.reply('添加内容不能@机器人！')
           return
         }
@@ -286,7 +285,7 @@ export class add extends plugin {
   }
 
   /** 添加成功回复消息 */
-  getRetMsg () {
+  getRetMsg() {
     let retMsg = this.getContext()
     let msg = ''
     if (retMsg?.addContext?.message) {
@@ -300,7 +299,7 @@ export class add extends plugin {
           continue
         }
         if (msg[i].type == 'at') {
-          if (msg[i].qq == Bot.uin) {
+          if (msg[i].qq == this.e.bot.uin) {
             delete msg[i]
             continue
           } else {
@@ -315,7 +314,7 @@ export class add extends plugin {
     return lodash.compact(msg)
   }
 
-  saveJson () {
+  saveJson() {
     let obj = {}
     for (let [k, v] of textArr[this.group_id]) {
       obj[k] = v
@@ -323,20 +322,20 @@ export class add extends plugin {
 
     fs.writeFileSync(`${this.path}${this.group_id}.json`, JSON.stringify(obj, '', '\t'))
   }
-  
+
   saveGlobalJson() {
     let obj = {};
-    for (let [k, v] of textArr[Bot.uin]) {
+    for (let [k, v] of textArr[this.e.bot.uin]) {
       obj[k] = v;
     }
 
     fs.writeFileSync(
-      `${this.path}${Bot.uin}.json`,
+      `${this.path}${this.e.bot.uin}.json`,
       JSON.stringify(obj, "", "\t")
     );
   }
 
-  async saveImg (url, keyWord) {
+  async saveImg(url, keyWord) {
     let groupCfg = cfg.getGroup(this.group_id)
     let savePath = `${this.facePath}${this.group_id}/`
 
@@ -374,9 +373,9 @@ export class add extends plugin {
     return savePath
   }
 
-  async getText () {
+  async getText() {
     if (!this.e.message) return false
-    
+
     this.isGlobal = false
 
     await this.getGroupId()
@@ -384,33 +383,33 @@ export class add extends plugin {
     if (!this.group_id) return false
 
     this.initTextArr()
-    
+
     this.initGlobalTextArr()
 
     let keyWord = this.e.toString()
       .replace(/#|＃/g, '')
-      .replace(`{at:${Bot.uin}}`, '')
+      .replace(`{at:${this.e.bot.uin}}`, '')
       .trim()
 
     keyWord = this.trimAlias(keyWord)
 
     let num = 0
     if (isNaN(keyWord)) {
-      num = keyWord.charAt(keyWord.length - 1)
+      num = keyWord.trim().match(/[0-9]+$/)?.[0]
 
-      if (!isNaN(num) && !textArr[this.group_id].has(keyWord) && !textArr[Bot.uin].has(keyWord)) {
+      if (!isNaN(num) && !textArr[this.group_id].has(keyWord) && !textArr[this.e.bot.uin].has(keyWord)) {
         keyWord = lodash.trimEnd(keyWord, num).trim()
         num--
       }
     }
 
     let msg = textArr[this.group_id].get(keyWord) || []
-    let globalMsg = textArr[Bot.uin].get(keyWord) || []
+    let globalMsg = textArr[this.e.bot.uin].get(keyWord) || []
     if (lodash.isEmpty(msg) && lodash.isEmpty(globalMsg)) return false
 
     msg = [...msg, ...globalMsg]
-    
-    if (num >= 0 && num < msg.length) {
+    /** 如果只有一个则不随机 */
+    if (num >= 0 && msg.length === 1) {
       msg = msg[num]
     } else {
       /** 随机获取一个 */
@@ -445,7 +444,7 @@ export class add extends plugin {
     return true
   }
 
-  expiredMsg (keyWord, num) {
+  expiredMsg(keyWord, num) {
     logger.mark(`[发送表情]${this.e.logText} ${keyWord} 表情已过期失效`)
 
     let arr = textArr[this.group_id].get(keyWord)
@@ -461,7 +460,7 @@ export class add extends plugin {
   }
 
   /** 初始化已添加内容 */
-  initTextArr () {
+  initTextArr() {
     if (textArr[this.group_id]) return
 
     textArr[this.group_id] = new Map()
@@ -509,14 +508,14 @@ export class add extends plugin {
       fs.mkdirSync(facePath)
     }
   }
-  
+
   /** 初始化全局已添加内容 */
   initGlobalTextArr() {
-    if (textArr[Bot.uin]) return;
+    if (textArr[this.e.bot.uin]) return;
 
-    textArr[Bot.uin] = new Map();
+    textArr[this.e.bot.uin] = new Map();
 
-    let globalPath = `${this.path}${Bot.uin}.json`;
+    let globalPath = `${this.path}${this.e.bot.uin}.json`;
     if (!fs.existsSync(globalPath)) {
       return;
     }
@@ -528,20 +527,20 @@ export class add extends plugin {
         if (text[i][0] && !Array.isArray(text[i][0])) {
           text[i] = [text[i]];
         }
-        textArr[Bot.uin].set(String(i), text[i]);
+        textArr[this.e.bot.uin].set(String(i), text[i]);
       }
     } catch (error) {
       logger.error(`json格式错误：${globalPath}`);
-      delete textArr[Bot.uin];
+      delete textArr[this.e.bot.uin];
       return false;
     }
 
     /** 加载表情 */
-    let globalFacePath = `${this.facePath}${Bot.uin}`;
+    let globalFacePath = `${this.facePath}${this.e.bot.uin}`;
 
     if (fs.existsSync(globalFacePath)) {
       const files = fs
-        .readdirSync(`${this.facePath}${Bot.uin}`)
+        .readdirSync(`${this.facePath}${this.e.bot.uin}`)
         .filter((file) => /\.(jpeg|jpg|png|gif)$/g.test(file));
 
       for (let val of files) {
@@ -549,9 +548,9 @@ export class add extends plugin {
         tmp[0] = tmp[0].replace(/_[0-9]{10}$/, "");
         if (/at|image/g.test(val)) continue;
 
-        if (textArr[Bot.uin].has(tmp[0])) continue;
+        if (textArr[this.e.bot.uin].has(tmp[0])) continue;
 
-        textArr[Bot.uin].set(tmp[0], [
+        textArr[this.e.bot.uin].set(tmp[0], [
           [
             {
               local: `${globalFacePath}/${val}`,
@@ -567,7 +566,7 @@ export class add extends plugin {
     }
   }
 
-  async del () {
+  async del() {
     this.isGlobal = this.e?.msg.includes("全局");
     await this.getGroupId()
     if (!this.group_id) return false
@@ -651,14 +650,14 @@ export class add extends plugin {
         img = item[0]
       }
       if (img.local) {
-        fs.unlink(img.local, () => {})
+        fs.unlink(img.local, () => { })
       }
     })
 
     this.saveJson()
   }
 
-  async list () {
+  async list() {
     this.isGlobal = this.e?.msg.includes("全局");
 
     let page = 1
@@ -706,93 +705,56 @@ export class add extends plugin {
       return
     }
 
-    let msg = []
-    let num = 0
+    let msg = [], result = [], num = 0
     for (let i in arr) {
       if (num >= page * pageSize) break
 
       let keyWord = await this.keyWordTran(arr[i].key)
       if (!keyWord) continue
-
       if (Array.isArray(keyWord)) {
-        keyWord.unshift(`${arr[i].num}、`)
-        keyWord.push('\n')
-        keyWord.forEach(v => msg.push(v))
+        keyWord.unshift(`${num + 1}、`)
+       // keyWord.push('\n')
+        keyWord.push(v => msg.push(v))
       } else if (keyWord.type) {
-        msg.push(`\n${arr[i].num}、`, keyWord, '\n\n')
+        msg.push(`\n${num + 1}、`, keyWord)
       } else {
-        msg.push(`${arr[i].num}、${keyWord}\n`)
+        msg.push(`${num + 1}、`, keyWord)
       }
       num++
     }
-
-    let end = ''
-    if (type == 'list' && count > 100) {
-      end = `更多内容请翻页查看\n如：#表情列表${Number(page) + 1}`
+    /** 数组分段 */
+    for (const i in msg) {
+      result.push([msg[i]])
+    }
+    /** 计算页数 */
+    let book = count / pageSize;
+  if (book % 1 === 0) {
+     book = result;
+  } else {
+    book = Math.floor(book) + 1;
+  }
+    if (type == 'list' && msg.length >= pageSize) {
+      result.push(`更多内容请翻页查看\n如：#表情列表${Number(page) + 1}`)
     }
 
-    let title = `表情列表，第${page}页，共${count}条`
+    let title = `表情列表，第${page}页，共${count}条，共${book}页`
     if (type == 'search') {
       title = `表情${search}，${count}条`
     }
 
-    let forwardMsg = await this.makeForwardMsg(Bot.uin, title, msg, end)
+    let forwardMsg = await common.makeForwardMsg(this.e, [title, ...result], title)
 
     this.e.reply(forwardMsg)
   }
 
-  async makeForwardMsg (qq, title, msg, end = '') {
-    let nickname = Bot.nickname
-    if (this.e.isGroup) {
-      let info = await Bot.getGroupMemberInfo(this.e.group_id, qq)
-      nickname = info.card ?? info.nickname
-    }
-    let userInfo = {
-      user_id: Bot.uin,
-      nickname
-    }
-
-    let forwardMsg = [
-      {
-        ...userInfo,
-        message: title
-      }
-    ]
-
-    let msgArr = lodash.chunk(msg, 40)
-    msgArr.forEach(v => {
-      v[v.length - 1] = lodash.trim(v[v.length - 1], '\n')
-      forwardMsg.push({ ...userInfo, message: v })
-    })
-
-    if (end) {
-      forwardMsg.push({ ...userInfo, message: end })
-    }
-
-    /** 制作转发内容 */
-    if (this.e.isGroup) {
-      forwardMsg = await this.e.group.makeForwardMsg(forwardMsg)
-    } else {
-      forwardMsg = await this.e.friend.makeForwardMsg(forwardMsg)
-    }
-
-    /** 处理描述 */
-    forwardMsg.data = forwardMsg.data
-      .replace(/\n/g, '')
-      .replace(/<title color="#777777" size="26">(.+?)<\/title>/g, '___')
-      .replace(/___+/, `<title color="#777777" size="26">${title}</title>`)
-
-    return forwardMsg
-  }
-
   /** 分页 */
-  pagination (pageNo, pageSize, array) {
+  pagination(pageNo, pageSize, array) {
     let offset = (pageNo - 1) * pageSize
     return offset + pageSize >= array.length ? array.slice(offset, array.length) : array.slice(offset, offset + pageSize)
   }
 
   /** 关键词转换成可发送消息 */
-  async keyWordTran (msg) {
+  async keyWordTran(msg) {
     /** 图片 */
     if (msg.includes('{image')) {
       let tmp = msg.split('{image')
@@ -807,7 +769,7 @@ export class add extends plugin {
 
       for (let qq of tmp) {
         qq = qq.match(/[1-9][0-9]{4,14}/g)[0]
-        let member = await await Bot.getGroupMemberInfo(this.group_id, Number(qq)).catch(() => { })
+        let member = await await this.e.bot.getGroupMemberInfo(this.group_id, Number(qq)).catch(() => { })
         let name = member?.card ?? member?.nickname
         if (!name) continue
         msg = msg.replace(`{at:${qq}}`, `@${name}`)

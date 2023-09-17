@@ -5,16 +5,15 @@ import puppeteer from '../../../lib/puppeteer/puppeteer.js'
 import common from '../../../lib/common/common.js'
 import gsCfg from '../model/gsCfg.js'
 
-const _path = process.cwd()
 let emoticon
 
 export default class MysNews extends base {
-  constructor (e) {
+  constructor(e) {
     super(e)
     this.model = 'mysNews'
   }
 
-  async getNews () {
+  async getNews(gid) {
     let type = 1
     let typeName = '公告'
     if (this.e.msg.includes('资讯')) {
@@ -26,7 +25,7 @@ export default class MysNews extends base {
       typeName = '活动'
     }
 
-    const res = await this.postData('getNewsList', { gids: 2, page_size: 20, type })
+    const res = await this.postData('getNewsList', { gids: gid, page_size: 20, type })
     if (!res) return
 
     const data = res.data.list
@@ -34,7 +33,7 @@ export default class MysNews extends base {
       return true
     }
 
-    const page = this.e.msg.replace(/#|＃|官方|原神|公告|资讯|活动/g, '').trim() || 1
+    const page = this.e.msg.replace(/#|＃|官方|星铁|原神|崩坏三|崩三|绝区零|崩坏二|崩二|崩坏学园二|未定|未定事件簿|公告|资讯|活动/g, '').trim() || 1
     if (page > data.length) {
       await this.e.reply('目前只查前20条最新的公告，请输入1-20之间的整数。')
       return true
@@ -42,95 +41,22 @@ export default class MysNews extends base {
 
     const postId = data[page - 1].post.post_id
 
-    const param = await this.newsDetail(postId)
+    const param = await this.newsDetail(postId, gid)
 
-    const img = await this.rander(param)
-
-    return await this.replyMsg(img, `原神${typeName}：${param.data.post.subject}`)
+    const img = await this.render(param)
+    let game = this.game()
+    return this.replyMsg(img, `${game}${typeName}：${param.data.post.subject}`)
   }
 
-  async rander (param) {
-    const pageHeight = 7000
-
-    await puppeteer.browserInit()
-
-    if (!puppeteer.browser) return false
-
-    const savePath = puppeteer.dealTpl('mysNews', param)
-    if (!savePath) return false
-
-    const page = await puppeteer.browser.newPage()
-    try {
-      await page.goto(`file://${_path}${lodash.trim(savePath, '.')}`, { timeout: 120000 })
-      const body = await page.$('#container') || await page.$('body')
-      const boundingBox = await body.boundingBox()
-
-      const num = Math.round(boundingBox.height / pageHeight) || 1
-
-      if (num > 1) {
-        await page.setViewport({
-          width: boundingBox.width,
-          height: pageHeight + 100
-        })
-      }
-
-      const img = []
-      for (let i = 1; i <= num; i++) {
-        const randData = {
-          type: 'jpeg',
-          quality: 90
-        }
-
-        if (i != 1 && i == num) {
-          await page.setViewport({
-            width: boundingBox.width,
-            height: parseInt(boundingBox.height) - pageHeight * (num - 1)
-          })
-        }
-
-        if (i != 1 && i <= num) {
-          await page.evaluate(() => window.scrollBy(0, 7000))
-        }
-
-        let buff
-        if (num == 1) {
-          buff = await body.screenshot(randData)
-        } else {
-          buff = await page.screenshot(randData)
-        }
-
-        if (num > 2) await common.sleep(200)
-
-        puppeteer.renderNum++
-        /** 计算图片大小 */
-        const kb = (buff.length / 1024).toFixed(2) + 'kb'
-
-        logger.mark(`[图片生成][${this.model}][${puppeteer.renderNum}次] ${kb}`)
-
-        img.push(segment.image(buff))
-      }
-
-      await page.close().catch((err) => logger.error(err))
-
-      if (num > 1) {
-        logger.mark(`[图片生成][${this.model}] 处理完成`)
-      }
-      return img
-    } catch (error) {
-      logger.error(`图片生成失败:${this.model}:${error}`)
-      /** 关闭浏览器 */
-      if (puppeteer.browser) {
-        await puppeteer.browser.close().catch((err) => logger.error(err))
-      }
-      puppeteer.browser = false
-    }
+  render(param) {
+    return puppeteer.screenshots(this.model, param)
   }
 
-  async newsDetail (postId) {
-    const res = await this.postData('getPostFull', { gids: 2, read: 1, post_id: postId })
+  async newsDetail(postId, gid) {
+    const res = await this.postData('getPostFull', { gids: gid, read: 1, post_id: postId })
     if (!res) return
 
-    const data = await this.detalData(res.data.post)
+    const data = await this.detalData(res.data.post, gid)
 
     return {
       ...this.screenData,
@@ -140,15 +66,15 @@ export default class MysNews extends base {
     }
   }
 
-  postApi (type, data) {
-    let host = 'https://bbs-api-static.mihoyo.com/'
+  postApi(type, data) {
+    let host = 'https://bbs-api.miyoushe.com/'
     let param = []
     lodash.forEach(data, (v, i) => param.push(`${i}=${v}`))
     param = param.join('&')
     switch (type) {
       // 搜索
       case 'searchPosts':
-        host = 'https://bbs-api.mihoyo.com/post/wapi/searchPosts?'
+        host = 'https://bbs-api.miyoushe.com/post/wapi/searchPosts?'
         break
       // 帖子详情
       case 'getPostFull':
@@ -165,10 +91,10 @@ export default class MysNews extends base {
     return host + param
   }
 
-  async postData (type, data) {
+  async postData(type, data) {
     const url = this.postApi(type, data)
     const headers = {
-      Referer: 'https://bbs.mihoyo.com/',
+      Referer: 'https://www.miyoushe.com',
       'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36'
     }
     let response
@@ -187,7 +113,7 @@ export default class MysNews extends base {
     return res
   }
 
-  async detalData (data) {
+  async detalData(data, gid) {
     let json
     try {
       json = JSON.parse(data.post.content)
@@ -207,7 +133,7 @@ export default class MysNews extends base {
       }
 
       if (!emoticon) {
-        emoticon = await this.mysEmoticon()
+        emoticon = await this.mysEmoticon(gid)
       }
 
       data.post.content = data.post.content.replace(/_\([^)]*\)/g, function (t, e) {
@@ -234,10 +160,10 @@ export default class MysNews extends base {
     return data
   }
 
-  async mysEmoticon () {
+  async mysEmoticon(gid) {
     const emp = new Map()
 
-    const res = await this.postData('emoticon', { gids: 2 })
+    const res = await this.postData('emoticon', { gids: gid })
 
     if (res.retcode != 0) {
       return emp
@@ -254,7 +180,7 @@ export default class MysNews extends base {
     return emp
   }
 
-  async mysSearch () {
+  async mysSearch() {
     let msg = this.e.msg
     msg = msg.replace(/#|米游社|mys/g, '')
 
@@ -282,12 +208,12 @@ export default class MysNews extends base {
 
     const param = await this.newsDetail(postId)
 
-    const img = await this.rander(param)
+    const img = await this.render(param)
 
-    return await this.replyMsg(img, `${param.data.post.subject}`)
+    return this.replyMsg(img, `${param.data.post.subject}`)
   }
 
-  async mysUrl () {
+  async mysUrl() {
     let msg = this.e.msg
     let postId = /[0-9]+/g.exec(msg)[0]
 
@@ -295,12 +221,12 @@ export default class MysNews extends base {
 
     const param = await this.newsDetail(postId)
 
-    const img = await this.rander(param)
+    const img = await this.render(param)
 
-    return await this.replyMsg(img, `${param.data.post.subject}`)
+    return this.replyMsg(img, `${param.data.post.subject}`)
   }
 
-  async ysEstimate () {
+  async ysEstimate() {
     let msg = '版本原石盘点'
     let res = await this.postData('searchPosts', { gids: 2, size: 20, keyword: msg })
     if (res?.data?.posts.length <= 0) {
@@ -322,103 +248,120 @@ export default class MysNews extends base {
 
     const param = await this.newsDetail(postId)
 
-    const img = await this.rander(param)
+    const img = await this.render(param)
 
     if (img.length > 1) {
       img.push(segment.image(param.data.post.images[0] + '?x-oss-process=image//resize,s_600/quality,q_80/auto-orient,0/interlace,1/format,jpg'))
     }
 
-    return await this.replyMsg(img, `${param.data.post.subject}`)
+    return this.replyMsg(img, `${param.data.post.subject}`)
   }
 
-  async replyMsg (img, titile) {
+  replyMsg(img, title) {
     if (!img || img.length <= 0) return false
     if (img.length == 1) {
-      return img[0]
-    } else {
-      let msg = [titile, ...img]
-      return await common.makeForwardMsg(this.e, msg, titile).catch((err) => {
-        logger.error(err)
-      })
+      if (title) return [title, ...img]
+      return img
     }
+    return common.makeForwardMsg(this.e, img, title)
   }
 
-  async mysNewsTask (type = 1) {
+  async mysNewsTask() {
     let cfg = gsCfg.getConfig('mys', 'pushNews')
 
     // 推送2小时内的公告资讯
     let interval = 7200
     // 最多同时推送两条
     this.maxNum = cfg.maxNum
-    // 包含关键字不推送
-    let banWord = /冒险助力礼包|纪行|预下载|脚本外挂|集中反馈|已开奖|云·原神|魔神任务|传说任务说明/g
 
-    let anno = await this.postData('getNewsList', { gids: 2, page_size: 10, type: 1 })
-    let info = await this.postData('getNewsList', { gids: 2, page_size: 10, type: 3 })
+    for (let gid of [1, 2, 3, 4, 6, 8]) {
+      let type = gid == 1 ? 'bbb' : gid == 2 ? 'gs' : gid == 3 ? 'bb' : gid == 4 ? 'wd' : gid == 6 ? 'sr' : 'zzz'
 
-    let news = []
-    if (anno) anno.data.list.forEach(v => { news.push({ ...v, typeName: '公告', post_id: v.post.post_id }) })
-    if (info) info.data.list.forEach(v => { news.push({ ...v, typeName: '资讯', post_id: v.post.post_id }) })
-    if (news.length <= 0) return
-
-    news = lodash.orderBy(news, ['post_id'], ['asc'])
-
-    let now = Date.now() / 1000
-
-    this.key = 'Yz:genshin:mys:newPush:'
-    this.e.isGroup = true
-    this.pushGroup = []
-    for (let val of news) {
-      if (Number(now - val.post.created_at) > interval) {
-        continue
+      let news = []
+      if (!lodash.isEmpty(cfg[`${type}announceGroup`])) {
+        let anno = await this.postData('getNewsList', { gids: gid, page_size: 10, type: 1 })
+        if (anno) anno.data.list.forEach(v => { news.push({ ...v, typeName: '公告', post_id: v.post.post_id }) })
       }
-      if (new RegExp(banWord).test(val.post.subject)) {
-        continue
+      if (!lodash.isEmpty(cfg[`${type}infoGroup`])) {
+        let info = await this.postData('getNewsList', { gids: gid, page_size: 10, type: 3 })
+        if (info) info.data.list.forEach(v => { news.push({ ...v, typeName: '资讯', post_id: v.post.post_id }) })
       }
-      if (val.typeName == '公告') {
-        for (let groupId of cfg.announceGroup) {
-          await this.sendNews(groupId, val.typeName, val.post.post_id)
-        }
-      }
-      if (val.typeName == '资讯') {
-        for (let groupId of cfg.infoGroup) {
-          await this.sendNews(groupId, val.typeName, val.post.post_id)
-        }
+
+      if (news.length <= 0) continue
+
+      news = lodash.orderBy(news, ['post_id'], ['asc'])
+
+      let now = Date.now() / 1000
+
+      this.key = `Yz:${type}:mys:newPush:`
+      this.e.isGroup = true
+      this.pushGroup = []
+      for (let val of news) {
+        if (Number(now - val.post.created_at) > interval)
+          continue
+        if (cfg.banWord[type] && new RegExp(cfg.banWord[type]).test(val.post.subject))
+          continue
+        if (val.typeName == '公告')
+          for (let botId in cfg[`${type}announceGroup`])
+            for (let groupId of cfg[`${type}announceGroup`][botId])
+              await this.sendNews(botId, groupId, val.typeName, val.post.post_id, gid)
+        if (val.typeName == '资讯')
+          for (let botId in cfg[`${type}infoGroup`])
+            for (let groupId of cfg[`${type}infoGroup`][botId])
+              await this.sendNews(botId, groupId, val.typeName, val.post.post_id, gid)
       }
     }
   }
 
-  async sendNews (groupId, typeName, postId) {
+  async sendNews(botId, groupId, typeName, postId, gid) {
     if (!this.pushGroup[groupId]) this.pushGroup[groupId] = 0
     if (this.pushGroup[groupId] >= this.maxNum) return
 
-    let sended = await redis.get(`${this.key}${groupId}:${postId}`)
+    let sended = await redis.get(`${this.key}${botId}:${groupId}:${postId}`)
     if (sended) return
 
-    if (!this[postId]) {
-      const param = await this.newsDetail(postId)
+    let game = this.game(gid)
+    // 判断是否存在群关系
+    this.e.group = Bot[botId]?.pickGroup(groupId)
+    if (!this.e.group) {
+      logger.mark(`[米游社${game}${typeName}推送] 群${botId}:${groupId}未关联`)
+      return
+    }
 
-      logger.mark(`[米游社${typeName}推送] ${param.data.post.subject}`)
+    if (!this[postId]) {
+      const param = await this.newsDetail(postId, gid)
+
+      logger.mark(`[米游社${game}${typeName}推送] ${param.data.post.subject}`)
 
       this[postId] = {
-        img: await this.rander(param),
+        img: await this.render(param),
         title: param.data.post.subject
       }
     }
 
     this.pushGroup[groupId]++
-    this.e.group = Bot.pickGroup(Number(groupId))
-    this.e.group_id = Number(groupId)
-    let tmp = await this.replyMsg(this[postId].img, `原神${typeName}推送：${this[postId].title}`)
+    await redis.set(`${this.key}${botId}:${groupId}:${postId}`, '1', { EX: 3600 * 10 })
+    // 随机延迟10-90秒
+    await common.sleep(lodash.random(10000, 90000))
+    const msg = await this.replyMsg(this[postId].img, `${game}${typeName}推送：${this[postId].title}`)
+    return this.e.group.sendMsg(msg)
+  }
 
-    await common.sleep(1000)
-    if (!tmp) return
-
-    if (tmp?.type != 'xml') {
-      tmp = [`原神${typeName}推送\n`, tmp]
+  game(gid) {
+    switch (gid) {
+      case 1:
+        return '崩坏三'
+      case 2:
+        return '原神'
+      case 3:
+        return '崩坏二'
+      case 4:
+        return '未定事件簿'
+      case 6:
+        return '崩坏星穹铁道'
+      case 8:
+        return '绝区零'
     }
-
-    redis.set(`${this.key}${groupId}:${postId}`, '1', { EX: 3600 * 10 })
-    await this.e.group.sendMsg(tmp)
+    return ''
   }
 }

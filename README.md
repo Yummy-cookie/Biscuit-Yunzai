@@ -3,14 +3,14 @@
 
 项目仅供学习交流使用，严禁用于任何商业用途和非法行为
 
-[目前功能](https://gitee.com/yoimiya-kokomi/Yunzai-Bot/tree/main/plugins/genshin)
+[目前功能](https://gitee.com/Yummy-cookie/Yunzai-Bot/tree/master/plugins/genshin)
 
 ## 使用方法
 >环境准备： Windows or Linux，Node.js（[版本至少v16以上](http://nodejs.cn/download/)），[Redis](https://redis.io/docs/getting-started/installation/)
 
 1.克隆项目
 ```
-git clone --depth=1 -b main https://gitee.com/yoimiya-kokomi/Yunzai-Bot.git
+git clone --depth=1 https://gitee.com/Yummy-cookie/Yunzai-Bot.git
 ```
 ```
 cd Yunzai-Bot #进入Yunzai目录
@@ -32,7 +32,7 @@ node app
 1. 执行(为了切换到喵喵的云崽)
 
 ```
-git remote set-url origin https://gitee.com/yoimiya-kokomi/Yunzai-Bot.git && git checkout main && git pull
+git remote set-url origin https://gitee.com/Yummy-cookie/Yunzai-Bot.git && git pull
 ```
 
 2. 执行(为了重置到最新的更新)
@@ -85,6 +85,5 @@ pnpm run start
 |[米游社友人A](https://bbs.mihoyo.com/ys/collection/428421) | 角色突破素材图来源 |
 
 ## 其他
-- 最后给个star或者[爱发电](https://afdian.net/@Le-niao)，你的支持是维护本项目的动力~~
 - 图片素材来源于网络，仅供交流学习使用
 - 严禁用于任何商业用途和非法行为
