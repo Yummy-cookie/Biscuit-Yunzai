@@ -38,7 +38,7 @@ git remote set-url origin https://gitee.com/Yummy-cookie/Yunzai-Bot.git && git p
 2. 执行(为了重置到最新的更新)
 
 ```
-git reset --hard origin/main
+git reset --hard origin
 ```
 
 3. 执行(为了升级依赖，同时修复部分迁移用户因pm2问题无法重启与后台运行)
