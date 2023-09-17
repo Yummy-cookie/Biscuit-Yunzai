@@ -29,7 +29,7 @@ node app
 ```
 
 ## Le佬版迁移教程
-1. 执行(为了切换到喵喵的云崽)
+1. 执行(为了切换到饼干的云崽)
 
 ```
 git remote set-url origin https://gitee.com/Yummy-cookie/Yunzai-Bot.git && git pull
