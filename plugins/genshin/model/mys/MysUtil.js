@@ -1,5 +1,3 @@
-import { Data } from '#miao'
-
 const games = [{ key: 'gs', name: '原神' }, { key: 'sr', name: '星穹铁道' }]
 
 const MysUtil = {
