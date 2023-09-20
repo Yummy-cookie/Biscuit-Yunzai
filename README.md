@@ -5,6 +5,8 @@
 
 [目前功能](https://gitee.com/Yummy-cookie/Yunzai-Bot/tree/master/plugins/genshin)
 
+[加入聊天群①](https://qm.qq.com/q/GtQ8atVLwY)
+
 ## 使用方法
 >环境准备： Windows or Linux，Node.js（[版本至少v16以上](http://nodejs.cn/download/)），[Redis](https://redis.io/docs/getting-started/installation/)
 
@@ -28,7 +30,7 @@ pnpm install -P
 node app
 ```
 
-## Le佬版迁移教程
+## Le佬版/喵佬版迁移教程
 1. 执行(为了切换到饼干的云崽)
 
 ```
