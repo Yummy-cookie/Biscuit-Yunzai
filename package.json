@@ -45,5 +45,9 @@
     "eslint-plugin-promise": "^6.1.1",
     "express": "^4.18.2",
     "express-art-template": "^1.0.1"
+  },
+    "imports": {
+            "#yunzai": "./plugins/genshin/system/components/index.js",
+            "#yunzai.models": "./plugins/genshin/system/models/index.js"
   }
 }
