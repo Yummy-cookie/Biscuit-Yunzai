@@ -4,7 +4,7 @@ import lodash from 'lodash'
 import puppeteer from 'puppeteer'
 // 暂时保留对原config的兼容
 import cfg from '../../../lib/config/config.js'
-import Data from './plugins/miao-plugin/components/Data.js'
+import { Data } from '#yunzai'
 
 const _path = process.cwd()
 // mac地址

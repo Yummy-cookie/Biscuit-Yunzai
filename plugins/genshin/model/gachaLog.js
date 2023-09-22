@@ -134,8 +134,25 @@ export default class GachaLog extends base {
 
   async checkUrl(param) {
     if (!param.region) {
-      this.e.reply('链接参数错误：缺少region\n请复制完整链接')
-      return false
+      let res = await this.logApi({
+        size: 6,
+        authkey: param.authkey,
+        region: this.e.isSr ? 'prod_gf_cn' : 'cn_gf01'
+      })
+      if (!res?.data?.region) {
+        res = await this.logApi({
+          size: 6,
+          authkey: param.authkey,
+          region: this.e.isSr ? 'prod_official_usa' : 'os_usa'
+        })
+      }
+
+      if (res?.data?.region) {
+        param.region = res?.data?.region
+      } else {
+        await this.e.reply('链接复制错误或已失效')
+        return false
+      }
     }
 
     let res = await this.logApi({
