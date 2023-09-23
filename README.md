@@ -5,7 +5,7 @@
 
 [目前功能](https://gitee.com/Yummy-cookie/Yunzai-Bot/tree/master/plugins/genshin)
 
-[加入聊天群①](https://qm.qq.com/q/GtQ8atVLwY)
+[加入聊天群①](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=7ypRMfqszQPra4kCpyMA-a0VkG6An9GQ&authKey=ZyhfSIqJlyIHj2x%2FkJE1lzbX61HXvPyH7ZINxAdoLsF35dWLSLpKlVSZxsKIhVde&noverify=0&group_code=374248018)
 
 ## 使用方法
 >环境准备： Windows or Linux，Node.js（[版本至少v16以上](http://nodejs.cn/download/)），[Redis](https://redis.io/docs/getting-started/installation/)
