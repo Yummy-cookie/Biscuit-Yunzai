@@ -3,7 +3,7 @@
 
 项目仅供学习交流使用，严禁用于任何商业用途和非法行为
 
-[目前功能](https://gitee.com/Yummy-cookie/Yunzai-Bot/tree/master/plugins/genshin)
+[目前功能](https://gitee.com/Yummy-cookie/Yunzai-Bot/blob/master/plugins/genshin/README.md)
 
 [加入聊天群①](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=7ypRMfqszQPra4kCpyMA-a0VkG6An9GQ&authKey=ZyhfSIqJlyIHj2x%2FkJE1lzbX61HXvPyH7ZINxAdoLsF35dWLSLpKlVSZxsKIhVde&noverify=0&group_code=374248018)
 
