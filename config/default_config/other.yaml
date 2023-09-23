@@ -4,6 +4,7 @@ autoFriend: 1
 autoQuit: 50
 # 主人QQ号
 masterQQ:
+ - 123456
 
 # 禁用私聊功能 true：私聊只接受ck以及抽卡链接（Bot主人不受限制），false：私聊可以触发全部指令，默认false
 disablePrivate: false
