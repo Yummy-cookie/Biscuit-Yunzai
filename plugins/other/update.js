@@ -257,7 +257,7 @@ export class update extends plugin {
 
     let title = `${plugin || 'Yunzai-Bot'}更新日志，共${line}条`
     if (!plugin) {
-      let end = '更多详细信息，请前往gitee查看\nhttps://gitee.com/yoimiya-kokomi/Yunzai-Bot/edit/main/'
+      let end = '更多详细信息，请前往gitee查看\nhttps://gitee.com/Yummy-cookie/Yunzai-Bot/'
       log = await common.makeForwardMsg(this.e, [title, log, end], title)
     }else {
       log = await common.makeForwardMsg(this.e, [title, log], title)
