@@ -13,18 +13,16 @@ export default class GachaLog extends base {
     this.urlKey = `${this.prefix}url:`
     /** 绑定的uid */
     this.uidKey = `Yz:genshin:mys:qq-uid:${this.userId}`
-
     this.path = `./data/gachaJson/${this.e.user_id}/`
-
     this.pool = [
       { type: 301, typeName: '角色' },
       { type: 302, typeName: '武器' },
       { type: 200, typeName: '常驻' }
     ]
-    if (e.isSr) {
-      /** 绑定的uid */
-      this.uidKey = `Yz:srJson:mys:qq-uid:${this.userId}`
 
+    if (!e.isSr && e.msg) e.isSr = /\/(common|hkrpg)\//.test(e.msg)
+    if (e.isSr) {
+      this.uidKey = `Yz:srJson:mys:qq-uid:${this.userId}`
       this.path = `./data/srJson/${this.e.user_id}/`
       this.pool = [
         { type: 11, typeName: '角色' },
@@ -46,16 +44,22 @@ export default class GachaLog extends base {
 
     this.e.reply('链接发送成功,数据获取中... 请耐心等待')
 
+    /** 制作合并消息 */
+    let MakeMsg = []
+    let tmpMsg = ''
     /** 按卡池更新记录 */
     for (let i in this.pool) {
       this.type = this.pool[i].type
       this.typeName = this.pool[i].typeName
       let res = await this.updateLog()
-      if (res) await this.e.reply(`${this.typeName}记录获取成功，更新${res.num}条`)
+      if (res) {
+        tmpMsg += `[${this.typeName}]记录获取成功，更新${res.num}条\n`
+      }
       if (i <= 1) await common.sleep(500)
     }
-
-    await this.e.reply(`抽卡记录更新完成，您还可回复\n【#${this?.e?.isSr?'光锥':'武器'}记录】统计武器池数据\n【#角色统计】按卡池统计数据\n【#导出记录】导出记录数据`)
+    MakeMsg.push(tmpMsg)
+    MakeMsg.push(`\n抽卡记录更新完成，您还可回复\n【${this?.e?.isSr ? '*' : '#'}全部抽卡记录】展示全部抽卡数据\n【${this?.e?.isSr ? '*光锥' : '#武器'}记录】统计${this?.e?.isSr ? '星铁光锥' : '武器'}池数据\n【${this?.e?.isSr ? '*' : '#'}角色统计】按卡池统计数据\n【#导出记录】导出记录数据`)
+    await this.e.reply(MakeMsg)
 
     this.isLogUrl = true
 
@@ -82,7 +86,9 @@ export default class GachaLog extends base {
 
   dealUrl(url) {
     // timestamp=1641338980〈=zh-cn 修复链接有奇怪符号
-    url = url.replace(/〈=/g, '&').split('getGachaLog?')[1]
+    url = url.replace(/〈=/g, '&')
+    if (url.includes('getGachaLog?')) url = url.split('getGachaLog?')[1]
+    if (url.includes('index.html?')) url = url.split('index.html?')[1]
 
     // 处理参数
     let arr = new URLSearchParams(url).entries()
@@ -134,8 +140,25 @@ export default class GachaLog extends base {
 
   async checkUrl(param) {
     if (!param.region) {
-      this.e.reply('链接参数错误：缺少region\n请复制完整链接')
-      return false
+      let res = await this.logApi({
+        size: 6,
+        authkey: param.authkey,
+        region: this.e.isSr ? 'prod_gf_cn' : 'cn_gf01'
+      })
+      if (!res?.data?.region) {
+        res = await this.logApi({
+          size: 6,
+          authkey: param.authkey,
+          region: this.e.isSr ? 'prod_official_usa' : 'os_usa'
+        })
+      }
+
+      if (res?.data?.region) {
+        param.region = res?.data?.region
+      } else {
+        await this.e.reply('链接复制错误或已失效')
+        return false
+      }
     }
 
     let res = await this.logApi({
@@ -192,7 +215,6 @@ export default class GachaLog extends base {
       logUrl = 'https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getGachaLog?'
     }
 
-
     let logParam = new URLSearchParams({
       authkey_ver: 1,
       lang: 'zh-cn', // 只支持简体中文
@@ -247,7 +269,7 @@ export default class GachaLog extends base {
 
     let logJson = this.readJson()
     /** 第一次获取增加提示 */
-    if (lodash.isEmpty(logJson.list) && this.type == 301) {
+    if (lodash.isEmpty(logJson.list) && this.type === 301) {
       await this.e.reply(`开始获取${this.typeName}记录，首次获取数据较多，请耐心等待...`)
     }
 
@@ -279,6 +301,9 @@ export default class GachaLog extends base {
       authkey,
       region: this.getServer()
     })
+
+    /** 延迟下防止武器记录获取失败 */
+    await common.sleep(1000)
 
     if (res.retcode != 0) {
       return { hasErr: true, list: [] }
@@ -352,26 +377,64 @@ export default class GachaLog extends base {
 
   /** #抽卡记录 */
   async getLogData() {
-    /** 卡池 */
-    this.getPool()
-
     /** 判断uid */
     await this.getUid()
-
     if (!this.uid) {
-      // await this.e.reply('当前绑定uid暂无抽卡记录')
       return false
     }
+    if (this.e?.isAll) {
+      return await this.getAllGcLogData()
+    } else {
+      return await this.getGcLogData()
+    }
+  }
 
+  async getAllGcLogData() {
+    this.model = 'gachaAllLog'
+    const poolList = ['角色', this.e?.isSr ? '光锥' : '武器', '常驻']
+    const logData = []
+    let fiveMaxNum = 0
+    const originalMsg = this.e.msg
+    for (let i of poolList) {
+      this.e.msg = i
+      this.all = []
+      let data = await this.getGcLogData()
+      if (!data || data.allNum === 0) {
+        continue
+      }
+      if (fiveMaxNum <= data.fiveLog.length) {
+        fiveMaxNum = data.fiveLog.length
+      }
+      data.max = i === '武器' || i === '光锥' ? 80 : 90
+      logData.push(data)
+    }
+    if (logData.length === 0) {
+      this.e.reply('暂无抽卡记录\n#记录帮助，查看配置说明', false, { at: true })
+      return true
+    }
+    for (let i of logData) {
+      let diffNum = fiveMaxNum - i.fiveLog.length
+      if (diffNum > 0) {
+        i.fiveLog = i.fiveLog.concat(new Array(diffNum).fill({ isUp: false, isNull: true }))
+      }
+    }
+    const data = {
+      ...logData[0],
+      data: logData
+    }
+    this.e.msg = originalMsg
+    return data
+  }
+
+  async getGcLogData() {
+    /** 卡池 */
+    this.getPool()
     /** 更新记录 */
     if (!this.isLogUrl) await this.updateLog()
-
     /** 统计计算记录 */
     let data = this.analyse()
-
     /** 渲染数据 */
     data = this.randData(data)
-
     return data
   }
 
@@ -395,11 +458,11 @@ export default class GachaLog extends base {
         this.type = this.e.isSr ? 12 : 302
         this.typeName = this.e.isSr ? '光锥' : '武器'
         break
-      case "光锥":
+      case '光锥':
         this.type = 12
         this.typeName = '光锥'
         break
-      case "新手":
+      case '新手':
         this.type = this.e.isSr ? 2 : 100
         this.typeName = '新手'
         break
@@ -418,8 +481,10 @@ export default class GachaLog extends base {
       this.e.reply('暂无抽卡记录\n#记录帮助，查看配置说明', false, { at: true })
       return false
     }
-
-    this.uid = await redis.get(this.uidKey)
+    this.uid = this?.e?.isSr ? this.e.user?._games?.sr?.uid : this.e.user?._games?.gs?.uid
+    if (!this.uid) {
+      this.uid = await redis.get(this.uidKey)
+    }
 
     /** 记录有绑定的uid */
     if (this.uid && logs.includes(String(this.uid))) {
@@ -429,7 +494,7 @@ export default class GachaLog extends base {
     /** 拿修改时间最后的uid */
     let uidArr = []
     for (let uid of logs) {
-      let json = this?.e?.isSr ? `${this.path}${uid}/301.json` : `${this.path}${uid}/11.json`
+      let json = this?.e?.isSr ? `${this.path}${uid}/11.json` : `${this.path}${uid}/301.json`
       if (!fs.existsSync(json)) {
         continue
       }
@@ -622,15 +687,15 @@ export default class GachaLog extends base {
       return false
     }
     let role5join = {
-      '刻晴': {
+      刻晴: {
         start: '2021-02-17 18:00:00',
         end: '2021-03-02 15:59:59'
       },
-      '提纳里': {
+      提纳里: {
         start: '2022-08-24 06:00:00',
         end: '2022-09-09 17:59:59'
       },
-      '迪希雅': {
+      迪希雅: {
         start: '2023-03-01 06:00:00',
         end: '2023-03-21 17:59:59'
       }
