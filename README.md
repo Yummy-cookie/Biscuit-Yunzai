@@ -89,3 +89,6 @@ pnpm run start
 ## 其他
 - 图片素材来源于网络，仅供交流学习使用
 - 严禁用于任何商业用途和非法行为
+
+<script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
+<script>LA.init({id:"3G1xKRfP0jKDnRSJ",ck:"3G1xKRfP0jKDnRSJ"})</script>
