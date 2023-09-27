@@ -77,11 +77,20 @@ const { changelogs, currentVersion } = readLogFile('miao')
 
 const yunzaiVersion = packageJson.version
 const isV3 = yunzaiVersion[0] === '3'
-const isMiao = packageJson.name === 'miao-yunzai'
+let isMiao = false
+let name = "Yunzai-Bot"
+if (packageJson.name === 'miao-yunzai') {
+  isMiao = true
+  name = "Miao-Yunzai"
+} else if (packageJson.name === 'trss-yunzai') {
+  isMiao = true
+  name = "TRSS-Yunzai"
+}
 
 let Version = {
   isV3,
   isMiao,
+  name,
   get version () {
     return currentVersion
   },
@@ -92,7 +101,7 @@ let Version = {
     return changelogs
   },
   runtime () {
-    console.log(`未能找到e.runtime，请升级至最新版${isV3 ? 'V3' : 'V2'}-Yunzai以使用genshin/system`)
+    console.log(`未能找到e.runtime，请升级至最新版${isV3 ? 'V3' : 'V2'}-Yunzai以使用miao-plugin`)
   },
   readLogFile
 }

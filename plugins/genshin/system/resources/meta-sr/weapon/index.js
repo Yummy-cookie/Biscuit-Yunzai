@@ -1,4 +1,4 @@
-import { Data } from '../../../components/index.js'
+import { Data } from '#yunzai'
 import lodash from 'lodash'
 
 const types = '存护,丰饶,毁灭,同谐,虚无,巡猎,智识'.split(',')

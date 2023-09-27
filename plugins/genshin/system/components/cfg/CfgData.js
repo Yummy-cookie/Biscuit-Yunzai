@@ -1,4 +1,4 @@
-import { cfgSchema } from './cfg_system.js'
+import { cfgSchema } from '../../config/system/cfg_system.js'
 import lodash from 'lodash'
 import { Data } from '../index.js'
 import fs from 'node:fs'
@@ -17,7 +17,7 @@ let cfgData = {
         ret.push(`export const ${cfgKey} = ${val.toString()}`, '')
       })
     })
-    fs.writeFileSync(`${process.cwd()}/plugins/genshin/system/config/cfg.js`, ret.join('\n'), 'utf8')
+    fs.writeFileSync(`${process.cwd()}/plugins/miao-plugin/config/cfg.js`, ret.join('\n'), 'utf8')
   },
 
   async getCfg () {

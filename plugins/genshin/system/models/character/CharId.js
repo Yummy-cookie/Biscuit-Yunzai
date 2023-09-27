@@ -2,10 +2,9 @@
  * 角色别名及角色ID相关
  * */
 import lodash from 'lodash'
-import { Data, Format } from '#yunzai'
+import { Data, Format } from '#miao'
 import { charPosIdx } from './CharMeta.js'
 import { aliasMap as aliasMapSR } from '../../resources/meta-sr/character/meta.js'
-
 
 // 别名表
 let aliasMap = {}

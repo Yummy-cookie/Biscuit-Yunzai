@@ -35,7 +35,7 @@ export default class ProfileRank {
     let keys = await redis.keys(`miao:rank:${groupId}:${type}:*`)
     let ret = []
     for (let key of keys) {
-      let keyRet = /^miao:rank:\d+:(?:mark|dmg|crit|valid):(\d{8})$/.exec(key)
+      let keyRet = /^miao:rank:[\w-]+:(?:mark|dmg|crit|valid):(\d{8})$/.exec(key)
       if (keyRet && keyRet[1]) {
         let charId = keyRet[1]
         let uid = await ProfileRank.getGroupMaxUid(groupId, charId, type)
@@ -199,9 +199,7 @@ export default class ProfileRank {
     let uidMap = {}
     let qqMap = {}
     let add = (qq, uid, type) => {
-      if (!uidMap || type === 'ck') {
-        uidMap[uid] = { uid, qq, type: type === 'ck' ? 'ck' : 'bind' }
-      }
+      uidMap[uid] = { uid, qq, type: type === 'ck' ? 'ck' : 'bind' }
       qqMap[qq] = true
     }
 
@@ -272,7 +270,8 @@ export default class ProfileRank {
     if (!uid) {
       return false
     }
-    if (uid * 1 < 100000005) {
+    // 预设面板不参与排名
+    if (uid * 1 < 100000006) {
       return false
     }
     try {

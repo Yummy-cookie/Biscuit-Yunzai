@@ -149,7 +149,7 @@ let Data = {
     let sysCfg = await Data.importModule(`config/system/${key}_system.js`, 'miao')
     let diyCfg = await Data.importModule(`config/${key}.js`, 'miao')
     if (diyCfg.isSys) {
-      console.error(`genshin/system: config/${key}.js无效，已忽略`)
+      console.error(`miao-plugin: config/${key}.js无效，已忽略`)
       console.error(`如需配置请复制config/${key}_default.js为config/${key}.js，请勿复制config/system下的系统文件`)
       diyCfg = {}
     }

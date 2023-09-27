@@ -76,14 +76,14 @@ export default function (step, staticStep) {
         shield: step(20)
       }
     }],
-    和璞鸢: [staticStep(), {
+    和璞鸢: {
       title: '满层攻击力提高[atkPct]%，伤害提升[dmg]%',
       refine: {
         atkPct: [3.2 * 7, 3.9 * 7, 4.6 * 7, 5.3 * 7, 6 * 7],
         dmg: step(12),
         phy: step(12)
       }
-    }],
+    },
     护摩之杖: [staticStep('hpPct', 20), {
       title: '角色生命低于50%时额外获得[atkPlus]攻击力',
       data: {
@@ -138,6 +138,20 @@ export default function (step, staticStep) {
         atkPct: step(12),
         mastery: step(48)
       }
-    }
+    },
+    峡湾长歌: {
+      title: '队伍中存在至少三种不同元素类型的角色时，元素精通提升[mastery]点',
+      refine: {
+        mastery: step(120)
+      }
+    },
+    勘探钻机: {
+      title: '满层下，提高[atkPct]%攻击力与[dmg]%所有元素伤害加成',
+      refine: {
+        atkPct: [3 * 3, 4 * 3, 5 * 3, 6 * 3, 7 * 3],
+        dmg: [7 * 3, 8.5 * 3, 10 * 3, 11.5 * 3, 13 * 3]
+      }
+    },
+    公义的酬报: false
   }
 }

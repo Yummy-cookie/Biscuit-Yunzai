@@ -1,5 +1,6 @@
 import lodash from 'lodash'
 import { Format } from '#yunzai'
+
 export const abbr = {
   炽烈的炎之魔女: '魔女',
   昔日宗室之仪: '宗室',
@@ -41,7 +42,9 @@ export const abbr = {
   沙上楼阁史话: '沙套',
   乐园遗落之花: '乐园',
   水仙之梦: '水仙',
-  花海甘露之光: '花海'
+  花海甘露之光: '花海',
+  逐影猎人: '猎人',
+  黄金剧团: '剧团'
 }
 
 export const mainAttr = {

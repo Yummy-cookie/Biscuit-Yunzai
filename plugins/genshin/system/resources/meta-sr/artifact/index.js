@@ -1,4 +1,4 @@
-import { Data } from '../../../components/index.js'
+import { Data } from '#miao'
 import lodash from 'lodash'
 import artisBuffs from './calc.js'
 

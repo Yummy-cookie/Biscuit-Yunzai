@@ -115,8 +115,9 @@ const CharImg = {
       tAdd(`passive${i}`, `icons/passive-${i}`)
     }
     imgs.a = `/common/item/atk-${weaponType}.webp`
-    imgs.e = talentCons.e === 3 ? imgs['cons3'] : imgs['cons5']
-    imgs.q = talentCons.q === 5 ? imgs['cons5'] : imgs['cons3']
+    for (let t of ['e', 'q']) {
+      imgs[t] = talentCons[t] > 0 ? imgs[`cons${talentCons[t]}`] : `${nPath}icons/talent-${t}.webp`
+    }
     return imgs
   },
   getImgsSr (name, talentCons) {
@@ -132,11 +133,11 @@ const CharImg = {
     for (let i = 1; i <= 3; i++) {
       add(`tree${i}`, `imgs/tree-${i}`)
     }
-    for (let key of ['a', 'e', 'q', 't', 'z']) {
+    for (let key of ['a', 'e', 'q', 't', 'z', 'a2', 'e2']) {
       add(key, `imgs/talent-${key}`)
     }
     for (let i = 1; i <= 6; i++) {
-      if (i !==3 && i !== 5) {
+      if (i !== 3 && i !== 5) {
         add(`cons${i}`, `imgs/cons-${i}`)
       }
     }

@@ -154,6 +154,29 @@ export default function (step, staticStep) {
       refine: {
         atkPct: step(40)
       }
+    }],
+    浪影阔剑: {
+      title: '受到治疗时，攻击力提升[atkPct]%',
+      refine: {
+        atkPct: step(24)
+      }
+    },
+    聊聊棒: [{
+      title: '承受火元素附着，攻击力提升[atkPct]%',
+      refine: {
+        atkPct: step(16)
+      }
+    }, {
+      title: '承受水元素、冰元素或雷元素，元素伤害加成提升[dmg]%',
+      refine: {
+        dmg: step(12)
+      }
+    }],
+    便携动力锯: [{
+      title: '满层时，元素精通提升[mastery]点',
+      data: {
+        mastery: step(40 * 3)
+      }
     }]
   }
 }

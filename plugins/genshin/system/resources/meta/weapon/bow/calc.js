@@ -225,7 +225,37 @@ export default function (step, staticStep) {
       data: {
         mastery: step(80)
       }
-    }
+    },
 
+    最初的大魔术: [{
+      title: '重击造成的伤害提升[a2Dmg]%',
+      refine: {
+        a2Dmg: step(16)
+      }
+    }, {
+      title: '满Buff下提高攻击力[atkPct]%',
+      refine: {
+        atkPct: step(48)
+      }
+    }],
+    烈阳之嗣: {
+      title: '对于灼心状态下的敌人造成的伤害提升[dmg]%',
+      refine: {
+        dmg: step(28)
+      }
+    },
+    测距规: {
+      title: '满层下，提高[atkPct]%攻击力与[dmg]%所有元素伤害加成',
+      refine: {
+        atkPct: [3 * 3, 4 * 3, 5 * 3, 6 * 3, 7 * 3],
+        dmg: [7 * 3, 8.5 * 3, 10 * 3, 11.5 * 3, 13 * 3]
+      }
+    },
+    静谧之曲: {
+      title: '受到治疗后，造成的伤害提升[dmg]%',
+      refine: {
+        dmg: step(16)
+      }
+    }
   }
 }

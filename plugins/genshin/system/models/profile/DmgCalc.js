@@ -1,7 +1,7 @@
 /*
 * 伤害计算 - 计算伤害
 * */
-import { eleBaseDmg, erTitle } from './DmgCalcMeta.js'
+import { eleBaseDmg, erTitle, breakBaseDmg } from './DmgCalcMeta.js'
 import DmgMastery from './DmgMastery.js'
 
 let DmgCalc = {
@@ -11,7 +11,9 @@ let DmgCalc = {
       talent, // 天赋类型
       ele, // 元素反应
       basicNum, // 基础数值
-      mode // 模式
+      mode, // 模式
+      dynamicDmg = 0, // 动态增伤
+      dynamicCdmg = 0 // 动态暴击伤害
     } = fnArgs
     let {
       ds, // 数据集
@@ -23,7 +25,7 @@ let DmgCalc = {
     } = data
     let calc = ds.calc
 
-    let { atk, dmg, phy, cdmg, cpct } = attr
+    let { atk, dmg, phy, cdmg, cpct, enemyDmg } = attr
 
     // 攻击区
     let atkNum = calc(atk)
@@ -32,16 +34,22 @@ let DmgCalc = {
     let multiNum = attr.multi / 100
 
     // 增伤区
-    let dmgNum = (1 + dmg.base / 100 + dmg.plus / 100)
+    let dmgNum = (1 + dmg.base / 100 + dmg.plus / 100 + dynamicDmg / 100)
 
     if (ele === 'phy') {
       dmgNum = (1 + phy.base / 100 + phy.plus / 100)
     }
 
+    // 易伤区
+    let enemyDmgNum = 1
+    if (game === 'sr') {
+      enemyDmgNum = 1 + enemyDmg.base / 100 + enemyDmg.plus / 100
+    }
+
     let cpctNum = cpct.base / 100 + cpct.plus / 100
 
     // 爆伤区
-    let cdmgNum = cdmg.base / 100 + cdmg.plus / 100
+    let cdmgNum = cdmg.base / 100 + cdmg.plus / 100 + dynamicCdmg / 100
 
     let enemyDef = attr.enemy.def / 100
     let enemyIgnore = attr.enemy.ignore / 100
@@ -55,6 +63,7 @@ let DmgCalc = {
 
       pctNum += ds.pct / 100
       dmgNum += ds.dmg / 100
+      enemyDmgNum += game === 'gs' ? 0 : ds.enemydmg / 100
       cpctNum += ds.cpct / 100
       cdmgNum += ds.cdmg / 100
       enemyDef += ds.def / 100
@@ -66,7 +75,8 @@ let DmgCalc = {
     // 防御区
     let defNum = (level + 100) / ((level + 100) + (enemyLv + 100) * (1 - enemyDef) * (1 - enemyIgnore))
     if (game === 'sr') {
-      defNum = (200 + level * 10) / ((200 + level * 10) + (200 + enemyLv * 10) * (1 - enemyDef) * (1 - enemyIgnore))
+      let enemyDefdown = enemyDef + enemyIgnore <= 1 ? enemyDef + enemyIgnore : 1
+      defNum = (200 + level * 10) / ((200 + level * 10) + (200 + enemyLv * 10) * (1 - enemyDefdown))
     }
 
     // 抗性区
@@ -95,8 +105,44 @@ let DmgCalc = {
 
     const isEle = ele !== false && ele !== 'phy'
     // 反应区
-    let eleNum = isEle ? DmgMastery.getBasePct(ele, attr.element) : 1
-    let eleBase = isEle ? 1 + attr[ele] / 100 + DmgMastery.getMultiple(ele, calc(attr.mastery)) : 1
+    let eleNum = 1
+    let eleBase = 1
+    if (game === 'gs') {
+      eleNum = isEle ? DmgMastery.getBasePct(ele, attr.element) : 1
+      eleBase = isEle ? 1 + attr[ele] / 100 + DmgMastery.getMultiple(ele, calc(attr.mastery)) : 1
+    }
+
+    let breakDotBase = 1
+    let stanceNum = 1
+    if (game === 'sr') {
+      switch (ele) {
+        case 'skillDot': {
+          pctNum = pctNum / 100
+          dmgNum += attr.dot.dmg / 100
+          enemyDmgNum += attr.dot.enemydmg / 100
+          break
+        }
+        case 'shock':
+        case 'burn':
+        case 'windShear':
+        case 'bleed':
+        case 'entanglement':
+        case 'lightningBreak':
+        case 'fireBreak':
+        case 'windBreak':
+        case 'physicalBreak':
+        case 'quantumBreak':
+        case 'imaginaryBreak': {
+          eleNum = DmgMastery.getBasePct(ele, attr.element)
+          stanceNum = 1 + calc(attr.stance) / 100
+          enemyDmgNum += attr.dot.enemydmg / 100
+          break
+        }
+        default:
+          break
+      }
+    }
+
     let dmgBase = (mode === 'basic') ? basicNum + plusNum : atkNum * pctNum * (1 + multiNum) + plusNum
     let ret = {}
 
@@ -135,17 +181,43 @@ let DmgCalc = {
         break
       }
 
+      case 'skillDot': {
+        ret = {
+          avg: dmgBase * dmgNum * enemyDmgNum * defNum * kNum
+        }
+        break
+      }
+
+      // 未计算层数(风化、纠缠)和韧性条系数(击破、纠缠)
+      case 'shock':
+      case 'burn':
+      case 'windShear':
+      case 'bleed':
+      case 'entanglement':
+      case 'lightningBreak':
+      case 'fireBreak':
+      case 'windBreak':
+      case 'physicalBreak':
+      case 'quantumBreak' :
+      case 'imaginaryBreak':{
+        breakDotBase *= breakBaseDmg[level]
+        ret = {
+          avg: breakDotBase * eleNum * stanceNum * enemyDmgNum * defNum * kNum
+        }
+        break
+      }
+
       default: {
         ret = {
-          dmg: dmgBase * dmgNum * (1 + cdmgNum) * defNum * kNum,
-          avg: dmgBase * dmgNum * (1 + cpctNum * cdmgNum) * defNum * kNum
+          dmg: dmgBase * dmgNum * enemyDmgNum * (1 + cdmgNum) * defNum * kNum,
+          avg: dmgBase * dmgNum * enemyDmgNum * (1 + cpctNum * cdmgNum) * defNum * kNum
         }
       }
     }
 
     if (showDetail) {
       console.log('Attr', attr)
-      console.log({ mode, dmgBase, atkNum, pctNum, multiNum, plusNum, dmgNum, cpctNum, cdmgNum, defNum, eleNum, kNum })
+      console.log({ mode, dmgBase, atkNum, pctNum, multiNum, plusNum, dmgNum, enemyDmgNum, stanceNum, cpctNum, cdmgNum, defNum, eleNum, kNum })
       console.log('Ret', ret)
     }
 
@@ -155,7 +227,7 @@ let DmgCalc = {
     let { showDetail, attr, ds, game } = data
     let { calc } = ds
 
-    let dmgFn = function (pctNum = 0, talent = false, ele = false, basicNum = 0, mode = 'talent') {
+    let dmgFn = function (pctNum = 0, talent = false, ele = false, basicNum = 0, mode = 'talent', dynamicData = false) {
       if (ele) {
         ele = erTitle[ele] || ele
       }
@@ -163,15 +235,19 @@ let DmgCalc = {
         // 星铁meta数据天赋为百分比前数字
         pctNum = pctNum * 100
       }
-      return DmgCalc.calcRet({ pctNum, talent, ele, basicNum, mode }, data)
+      return DmgCalc.calcRet({ pctNum, talent, ele, basicNum, mode, ...dynamicData }, data)
     }
 
-    dmgFn.basic = function (basicNum = 0, talent = false, ele = false) {
-      return dmgFn(0, talent, ele, basicNum, 'basic')
+    dmgFn.basic = function (basicNum = 0, talent = false, ele = false, dynamicData = false) {
+      return dmgFn(0, talent, ele, basicNum, 'basic', dynamicData)
     }
 
     dmgFn.reaction = function (ele = false) {
       return dmgFn(0, 'fy', ele, 0, 'basic')
+    }
+
+    dmgFn.dynamic = function (pctNum = 0, talent = false, dynamicData = false, ele = false) {
+      return dmgFn(pctNum, talent, ele, 0, 'talent', dynamicData)
     }
 
     // 计算治疗
