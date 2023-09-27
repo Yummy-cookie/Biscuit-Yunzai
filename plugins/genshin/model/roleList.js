@@ -28,7 +28,7 @@ export default class RoleList extends base {
     if (avatars.length <= 0) return false
 
     /** 判断是否绑定了ck */
-    this.ck = await MysInfo.checkUidBing(uid, this.e)
+    this.ck = await MysInfo.checkUidBing(uid)
 
     let skill = []
     if (this.ck) {

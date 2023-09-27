@@ -1,15 +1,11 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import { PayData, renderImg } from '../model/payLogData.js'
-import NoteUser from '../model/mys/NoteUser.js'
 import url from 'url'
 import fs from 'fs'
 import path from 'path'
 import yaml from 'yaml'
 
 export class payLog extends plugin {
-  dirPath = path.resolve('./data/payLog/')
-  authKey = ''
-
   constructor () {
     super({
       name: '充值记录',
@@ -37,6 +33,9 @@ export class payLog extends plugin {
       ]
     })
   }
+
+  dirPath = path.resolve('./data/payLog/')
+  authKey = ''
 
   async payLog (e) {
     // 判断是否存有已经生成的数据
@@ -95,7 +94,6 @@ export class payLog extends plugin {
       return false
     }
     this.authKey = decodeURIComponent(match[1])
-
     // 获取数据
     this.reply('正在获取消费数据,可能需要30s~~')
     let data = new PayData(this.authKey)
@@ -151,9 +149,17 @@ export class payLog extends plugin {
   }
 
   /** 判断主uid，若没有则返回false,有则返回主uid */
-  async isMain (id, game = 'gs') {
-    let user = await NoteUser.create(id)
-    return user.getCkUid(game)
+  async isMain (id) {
+    const ckPath = path.resolve('./data/MysCookie')
+    if (fs.readdirSync(ckPath, 'utf-8').includes(id + '.yaml')) {
+      let ck = fs.readFileSync(ckPath + `/${id}.yaml`, 'utf-8')
+      ck = yaml.parse(ck)
+      for (let k in ck) {
+        if (ck[k].isMain) return k
+      }
+    } else {
+      return false
+    }
   }
 
   /** 存储数据 */

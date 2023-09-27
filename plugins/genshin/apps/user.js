@@ -29,7 +29,7 @@ export class user extends plugin {
           fnc: 'noLogin'
         },
         {
-          reg: '^#?(原神|星铁)?我的(ck|cookie)$',
+          reg: '^#?我的(ck|cookie)$',
           event: 'message',
           fnc: 'myCk'
         },
@@ -38,15 +38,11 @@ export class user extends plugin {
           fnc: 'delCk'
         },
         {
-          reg: '^#?(原神|星铁)?(删除|解绑)uid\\s*[0-9]{1,2}$',
-          fnc: 'delUid'
-        },
-        {
-          reg: '^#(原神|星铁)?绑定(uid|UID)?[1-9][0-9]{8}$',
+          reg: '^#绑定(uid|UID)?(\\s)*[1-9][0-9]{8}$',
           fnc: 'bingUid'
         },
         {
-          reg: '^#(原神|星铁)?(我的)?(uid|UID)[0-9]{0,2}$',
+          reg: '^#(我的)?(uid|UID)[0-9]{0,2}$',
           fnc: 'showUid'
         },
         {
@@ -59,8 +55,12 @@ export class user extends plugin {
   }
 
   async init () {
+    let file = './data/MysCookie'
+    if (!fs.existsSync(file)) {
+      fs.mkdirSync(file)
+    }
     /** 加载旧的绑定ck json */
-    await this.loadOldData()
+    this.loadOldData()
   }
 
   /** 接受到消息都会执行一次 */
@@ -146,15 +146,6 @@ export class user extends plugin {
     }
   }
 
-  async delUid () {
-    let index = this.e.msg.match(/[0-9]{1,2}$/g)
-    let uidIdx = index && index[0]
-    let game = this.e
-    if (uidIdx) {
-      await this.User.delUid(uidIdx, game)
-    }
-  }
-
   /** 我的ck */
   async myCk () {
     if (this.e.isGroup) {
@@ -165,10 +156,8 @@ export class user extends plugin {
   }
 
   /** 加载旧的绑定ck json */
-  async loadOldData () {
-    await this.User.loadOldDataV2()
-    await this.User.loadOldDataV3()
-    await this.User.loadOldUid()
+  loadOldData () {
+    this.User.loadOldData()
   }
 
   /** 检查用户CK状态 **/
