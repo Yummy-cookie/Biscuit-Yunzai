@@ -21,7 +21,7 @@ export class strategy extends plugin {
       name: '米游社攻略',
       dsc: '米游社攻略图',
       event: 'message',
-      priority: 500,
+      priority: 50,
       rule: [
         {
           reg: '^#?(更新)?\\S+攻略([1-4])?$',
@@ -40,13 +40,13 @@ export class strategy extends plugin {
 
     this.set = gsCfg.getConfig('mys', 'set')
 
-    this.path = './data/strategy'
+    this.path = './temp/strategy'
 
     this.url = 'https://bbs-api.mihoyo.com/post/wapi/getPostFullInCollection?&gids=2&order_type=2&collection_id='
     this.collection_id = [
       [],
       // 来源：西风驿站
-      [839176, 839179, 839181, 1180811],
+      [839176, 839179, 839181, 1180811, 2226210],
       // 来源：原神观测枢
       [813033],
       // 来源：派蒙喵喵屋
@@ -89,7 +89,7 @@ export class strategy extends plugin {
 
     /** 主角特殊处理 */
     if (['10000005', '10000007', '20000000'].includes(String(role.roleId))) {
-      let travelers = ['风主', '岩主', '雷主', '草主']
+      let travelers = ['风主', '岩主', '雷主', '草主', '水主']
       if (!travelers.includes(role.alias)) {
         let msg = '请选择：'
         for (let sub of travelers) {

@@ -1,8 +1,8 @@
 import md5 from 'md5'
-import lodash from 'lodash'
 import fetch from 'node-fetch'
 import cfg from '../../../../lib/config/config.js'
 import apiTool from './apiTool.js'
+
 let HttpsProxyAgent = ''
 export default class MysApi {
   /**
@@ -11,7 +11,7 @@ export default class MysApi {
    * @param option 其他参数
    * @param option.log 是否显示日志
    */
-  constructor(uid, cookie, option = {}, isSr = false) {
+  constructor (uid, cookie, option = {}, isSr = false) {
     this.uid = uid
     this.cookie = cookie
     this.isSr = isSr
@@ -26,8 +26,14 @@ export default class MysApi {
     }
   }
 
-  getUrl(type, data = {}) {
-    let urlMap = this.apiTool.getUrlMap(data)
+  /* eslint-disable quotes */
+  get device () {
+    if (!this._device) this._device = `Yz-${md5(this.uid).substring(0, 5)}`
+    return this._device
+  }
+
+  getUrl (type, data = {}) {
+    let urlMap = this.apiTool.getUrlMap({ ...data, deviceId: this.device })
     if (!urlMap[type]) return false
 
     let { url, query = '', body = '', sign = '' } = urlMap[type]
@@ -40,7 +46,7 @@ export default class MysApi {
     return { url, headers, body }
   }
 
-  getServer() {
+  getServer () {
     let uid = this.uid
     switch (String(uid)[0]) {
       case '1':
@@ -60,7 +66,7 @@ export default class MysApi {
     return 'cn_gf01'
   }
 
-  async getData(type, data = {}, cached = false) {
+  async getData (type, data = {}, cached = false) {
     let { url, headers, body } = this.getUrl(type, data)
 
     if (!url) return false
@@ -121,7 +127,7 @@ export default class MysApi {
     return res
   }
 
-  getHeaders(query = '', body = '', sign = false) {
+  getHeaders (query = '', body = '') {
     const cn = {
       app_version: '2.40.1',
       User_Agent: `Mozilla/5.0 (Linux; Android 12; ${this.device}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.73 Mobile Safari/537.36 miHoYoBBS/2.40.1`,
@@ -144,22 +150,6 @@ export default class MysApi {
     } else {
       client = cn
     }
-    if (sign) {
-      return {
-        'x-rpc-app_version': client.app_version,
-        'x-rpc-client_type': client.client_type,
-        'x-rpc-device_id': this.option.device_id || this.getGuid(),
-        'User-Agent': client.User_Agent,
-        'X-Requested-With': client.X_Requested_With,
-        'x-rpc-platform': 'android',
-        'x-rpc-device_model': this.device,
-        'x-rpc-device_name': this.device,
-        'x-rpc-channel': 'miyousheluodi',
-        'x-rpc-sys_version': '6.0.1',
-        Referer: client.Referer,
-        DS: this.getDsSign()
-      }
-    }
     return {
       'x-rpc-app_version': client.app_version,
       'x-rpc-client_type': client.client_type,
@@ -169,9 +159,9 @@ export default class MysApi {
     }
   }
 
-  getDs(q = '', b = '') {
+  getDs (q = '', b = '') {
     let n = ''
-    if (['cn_gf01', 'cn_qd01','prod_gf_cn','prod_qd_cn'].includes(this.server)) {
+    if (['cn_gf01', 'cn_qd01', 'prod_gf_cn', 'prod_qd_cn'].includes(this.server)) {
       n = 'xV8v4Qu54lUKrEYFZkJhB8cuOh9Asafs'
     } else if (/os_|official/.test(this.server)) {
       n = 'okr4obncj8bw5a65hbnn5oo6ixjc3l9w'
@@ -182,40 +172,24 @@ export default class MysApi {
     return `${t},${r},${DS}`
   }
 
-  /** 签到ds */
-  getDsSign() {
-    /** @Womsxd */
-    const n = 'jEpJb9rRARU2rXDA9qYbZ3selxkuct9a'
-    const t = Math.round(new Date().getTime() / 1000)
-    const r = lodash.sampleSize('abcdefghijklmnopqrstuvwxyz0123456789', 6).join('')
-    const DS = md5(`salt=${n}&t=${t}&r=${r}`)
-    return `${t},${r},${DS}`
-  }
-
-  getGuid() {
-    function S4() {
+  getGuid () {
+    function S4 () {
       return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
     }
 
     return (S4() + S4() + '-' + S4() + '-' + S4() + '-' + S4() + '-' + S4() + S4() + S4())
   }
 
-  cacheKey(type, data) {
+  cacheKey (type, data) {
     return 'Yz:genshin:mys:cache:' + md5(this.uid + type + JSON.stringify(data))
   }
 
-  async cache(res, cacheKey) {
+  async cache (res, cacheKey) {
     if (!res || res.retcode !== 0) return
     redis.setEx(cacheKey, this.cacheCd, JSON.stringify(res))
   }
 
-  /* eslint-disable quotes */
-  get device() {
-    if (!this._device) this._device = `Yz-${md5(this.uid).substring(0, 5)}`
-    return this._device
-  }
-
-  async getAgent() {
+  async getAgent () {
     let proxyAddress = cfg.bot.proxyAddress
     if (!proxyAddress) return null
     if (proxyAddress === 'http://0.0.0.0:0') return null
@@ -227,7 +201,7 @@ export default class MysApi {
         logger.error(err)
       })
 
-      HttpsProxyAgent = HttpsProxyAgent ? HttpsProxyAgent.default : undefined
+      HttpsProxyAgent = HttpsProxyAgent ? HttpsProxyAgent.HttpsProxyAgent : undefined
     }
 
     if (HttpsProxyAgent) {
