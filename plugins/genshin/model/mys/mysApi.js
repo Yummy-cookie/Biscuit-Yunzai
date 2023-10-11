@@ -166,6 +166,21 @@ export default class MysApi {
       client = os
     } else {
       client = cn
+      if (sign) {
+      return {
+        'x-rpc-app_version': client.app_version,
+        'x-rpc-client_type': client.client_type,
+        'x-rpc-device_id': this.option.device_id || this.getGuid(),
+        'User-Agent': client.User_Agent,
+        'X-Requested-With': client.X_Requested_With,
+        'x-rpc-platform': 'android',
+        'x-rpc-device_model': this.device,
+        'x-rpc-device_name': this.device,
+        'x-rpc-channel': 'miyousheluodi',
+        'x-rpc-sys_version': '6.0.1',
+        Referer: client.Referer,
+        DS: this.getDsSign()
+      }
     }
     return {
       'x-rpc-app_version': client.app_version,
@@ -186,6 +201,16 @@ export default class MysApi {
     let t = Math.round(new Date().getTime() / 1000)
     let r = Math.floor(Math.random() * 900000 + 100000)
     let DS = md5(`salt=${n}&t=${t}&r=${r}&b=${b}&q=${q}`)
+    return `${t},${r},${DS}`
+  }
+
+  /** 签到ds */
+  getDsSign() {
+    /** @Womsxd */
+    const n = 'jEpJb9rRARU2rXDA9qYbZ3selxkuct9a'
+    const t = Math.round(new Date().getTime() / 1000)
+    const r = lodash.sampleSize('abcdefghijklmnopqrstuvwxyz0123456789', 6).join('')
+    const DS = md5(`salt=${n}&t=${t}&r=${r}`)
     return `${t},${r},${DS}`
   }
 
