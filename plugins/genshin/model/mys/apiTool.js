@@ -102,6 +102,24 @@ export default class apiTool {
           url: `${hostRecord}game_record/app/genshin/api/gcg/cardList`,
           query: `limit=999&need_action=true&need_avatar=false&need_stats=true&offset=0&role_id=${this.uid}&server=${this.server}`
         },
+        /** 签到信息 */
+                bbs_sign_info: {
+                    url: `${host}event/bbs_sign_reward/info`,
+                    query: `act_id=e202009291139501&region=${this.server}&uid=${this.uid}`,
+                    sign: true
+                },
+                /** 签到奖励 */
+                bbs_sign_home: {
+                    url: `${host}event/bbs_sign_reward/home`,
+                    query: `act_id=e202009291139501&region=${this.server}&uid=${this.uid}`,
+                    sign: true
+                },
+                /** 签到 */
+                bbs_sign: {
+                    url: `${host}event/bbs_sign_reward/sign`,
+                    body: { act_id: 'e202009291139501', region: this.server, uid: this.uid },
+                    sign: true
+                    },
         /**使用兑换码 目前仅限国际服,来自于国服的uid请求已在myinfo.js的init方法提前拦截 */
         useCdk: {
           url: 'PLACE_HOLDER',
@@ -156,6 +174,24 @@ export default class apiTool {
             app_name: 'account_cn',
             device_fp: '38d7ee834d1e9'
           },
+              /** 签到信息 */
+                bbs_sign_info: {
+                    url: `${host}event/luna/info`,
+                    query: `act_id=e202304121516551&region=${this.server}&uid=${this.uid}`,
+                    sign: true
+                },
+                /** 签到奖励 */
+                bbs_sign_home: {
+                    url: `${host}event/luna/home`,
+                    query: `act_id=e202304121516551&region=${this.server}&uid=${this.uid}`,
+                    sign: true
+                },
+                /** 签到 */
+                bbs_sign: {
+                    url: `${host}event/luna/sign`,
+                    body: { act_id:'e202304121516551', region: this.server, uid: this.uid },
+                    sign: true
+                    },
         },
         /**
          * 开拓阅历接口
@@ -189,6 +225,12 @@ export default class apiTool {
     }
 
     if (this.server.startsWith('os')) {
+      urlMap.genshin.bbs_sign_info.url = 'https://hk4e-api-os.hoyoverse.com/event/sol/info'
+            urlMap.genshin.bbs_sign_info.query = `act_id=e202102251931481&region=${this.server}&uid=${this.uid}`
+            urlMap.genshin.bbs_sign_home.url = 'https://hk4e-api-os.hoyoverse.com/event/sol/home'
+            urlMap.genshin.bbs_sign_home.query = `act_id=e202102251931481&region=${this.server}&uid=${this.uid}`
+            urlMap.genshin.bbs_sign.url = 'https://hk4e-api-os.hoyoverse.com/event/sol/sign'
+            urlMap.genshin.bbs_sign.body = { act_id: 'e202102251931481', region: this.server, uid: this.uid }
       urlMap.genshin.detail.url = 'https://sg-public-api.hoyolab.com/event/calculateos/sync/avatar/detail'// 角色天赋详情
       urlMap.genshin.detail.query = `lang=zh-cn&uid=${this.uid}&region=${this.server}&avatar_id=${data.avatar_id}`
       urlMap.genshin.avatarSkill.url = 'https://sg-public-api.hoyolab.com/event/calculateos/avatar/skill_list'// 查询未持有的角色天赋
@@ -203,6 +245,15 @@ export default class apiTool {
       urlMap.genshin.useCdk.url = 'https://sg-hk4e-api.hoyoverse.com/common/apicdkey/api/webExchangeCdkey'
       urlMap.genshin.useCdk.query = `uid=${this.uid}&region=${this.server}&lang=zh-cn&cdkey=${data.cdk}&game_biz=hk4e_global`
     }
+      if(this.isSr&&this.server.includes('official')){
+            urlMap.honkaisr.bbs_sign.url=`https://sg-public-api.hoyolab.com/event/luna/os/sign`
+            urlMap.honkaisr.bbs_sign.body = { act_id: 'e202303301540311', lang: "zh-cn" }
+            urlMap.honkaisr.bbs_sign_home.url=`https://sg-public-api.hoyolab.com/event/luna/os/home`
+            urlMap.honkaisr.bbs_sign_home.query=`act_id=e202303301540311&region=${this.server}&uid=${this.uid}&lang=zh-cn`
+
+            urlMap.honkaisr.bbs_sign_info.url=`https://sg-public-api.hoyolab.com/event/luna/os/info`
+            urlMap.honkaisr.bbs_sign_info.query=`act_id=e202303301540311&region=${this.server}&uid=${this.uid}&lang=zh-cn`
+          }
     return urlMap[this.game]
   }
 }
