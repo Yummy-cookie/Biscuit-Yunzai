@@ -20,23 +20,23 @@ export class gcLog extends plugin {
           fnc: 'logUrl'
         },
         {
-          reg: '#txt日志文件导入记录',
+          reg: '#txt(日志)?(文件)?导入记录',
           fnc: 'logFile'
         },
         {
-          reg: '#xlsx文件导入记录',
+          reg: '#*(原神|星铁)?(xlsx|excel)(文件)?导入记录',
           fnc: 'logXlsx'
         },
         {
-          reg: '#json文件导入记录',
+          reg: '#*(原神|星铁)?json(文件)?导入记录',
           fnc: 'logJson'
         },
         {
-          reg: '^#*(原神|星铁|崩坏星穹铁道|铁道)?(抽卡|抽奖|角色|武器|常驻|up|新手|光锥)池*(记录|祈愿|分析)$',
+          reg: '^#*(原神|星铁)?(全部)?(抽卡|抽奖|角色|武器|常驻|up|新手|光锥|全部)池*(记录|祈愿|分析)$',
           fnc: 'getLog'
         },
         {
-          reg: '^#*导出记录(excel|xlsx|json)*$',
+          reg: '^#*(原神|星铁)?导出记录(excel|xlsx|json)*$',
           fnc: 'exportLog'
         },
         {
@@ -48,18 +48,17 @@ export class gcLog extends plugin {
           fnc: 'helpPort'
         },
         {
-          reg: '^#*(原神|星铁|崩坏星穹铁道|铁道)?(抽卡|抽奖|角色|武器|常驻|up|新手|光锥)池*统计$',
+          reg: '^#*(原神|星铁)?(抽卡|抽奖|角色|武器|常驻|up|新手|光锥)池*统计$',
           fnc: 'logCount'
         }
       ]
     })
 
-    this.androidUrl = 'docs.qq.com/doc/DUWpYaXlvSklmVXlX'
-    this._path = process.cwd().replace(/\\/g, '/')
+    this.androidUrl = 'https://docs.qq.com/doc/DUWpYaXlvSklmVXlX'
   }
 
   async init() {
-    let file = ['./data/gachaJson', './data/srJson', './data/html/StarRail']
+    let file = ['./data/gachaJson', './data/srJson', './temp/html/StarRail']
     for (let i of file) {
       if (!fs.existsSync(i)) {
         fs.mkdirSync(i)
@@ -98,8 +97,8 @@ export class gcLog extends plugin {
 
     let data = await new GachaLog(this.e).logUrl()
     if (!data) return
-    let url = this.srHead('gachaLog', data)
-    let img = await puppeteer.screenshot(url, data)
+
+    let img = await puppeteer.screenshot(`${data.srtempFile}gachaLog`, data)
     if (img) await this.reply(img)
   }
 
@@ -121,17 +120,21 @@ export class gcLog extends plugin {
     if (!data) return false
 
     if (typeof data != 'object') return
-    let url = this.srHead('gachaLog', data)
-    let img = await puppeteer.screenshot(url, data)
+
+    let img = await puppeteer.screenshot(`${data.srtempFile}gachaLog`, data)
     if (img) await this.reply(img)
   }
 
   /** #抽卡记录 */
   async getLog() {
+    this.e.isAll = !!(this.e.msg.includes('全部'))
     let data = await new GachaLog(this.e).getLogData()
     if (!data) return
-    let url = this.srHead('gachaLog', data)
-    let img = await puppeteer.screenshot(url, data)
+    let name = `${data.srtempFile}gachaLog`
+    if (this.e.isAll) {
+      name = `${data.srtempFile}gachaAllLog`
+    }
+    let img = await puppeteer.screenshot(name, data)
     if (img) await this.reply(img)
   }
 
@@ -139,12 +142,6 @@ export class gcLog extends plugin {
   async exportLog() {
     if (this.e.isGroup) {
       await this.reply('请私聊导出', false, { at: true })
-      return
-    }
-
-    let friend = Bot.fl.get(Number(this.e.user_id))
-    if (!friend) {
-      await this.reply('无法发送文件，请先添加好友')
       return
     }
 
@@ -163,57 +160,68 @@ export class gcLog extends plugin {
       return true
     }
 
-    if (!this.e.file) {
-      await this.e.reply('请发送xlsx文件')
-      return true
-    }
+    const gsTips = `注：不支持https://github.com/biuuu/genshin-wish-export项目导出的excel文件,如果是该项目的文件请发送任意消息，取消excel导入后，使用【#json导入记录】`;
+    const srTips = `注:适配https://github.com/biuuu/star-rail-warp-export项目导出的excel文件`;
 
-    await new ExportLog(this.e).logXlsx()
+    await this.e.reply(`请发送xlsx文件，该文件需要以${this.e?.isSr ? '*' : '#'}的uid命名，如：100000000.xlsx\n否则可能无法正确识别，如果误触可发送任意消息取消导入\n${this.e?.isSr ? srTips : gsTips}`);
+    this.setContext('importLogXlsx');
+  }
+
+  async importLogXlsx() {
+    if (!this.e.file) {
+      await this.e.reply(`未检测到excel文件，操作已取消，请重新发送【${this.e?.isSr ? '*' : '#'}excel导入记录】`);
+    }
+    else {
+      this.e.isSr = this.getContext()?.importLogXlsx.isSr;
+      await new ExportLog(this.e).logXlsx();
+    }
+    this.finish('importLogXlsx');
   }
 
   async logJson() {
     if (!this.e.isPrivate) {
-      await this.e.reply('请私聊发送Json文件', false, { at: true })
+      await this.e.reply('请私聊发送日志文件', false, { at: true })
       return true
     }
 
+    const gsTips = `注：适配https://github.com/biuuu/genshin-wish-export项目导出的json文件`;
+    const srTips = `注:适配https://github.com/biuuu/star-rail-warp-export项目导出的json文件`;
+
+    await this.e.reply(`请发送json文件，该文件需要以${this.e?.isSr ? '*' : '#'}的uid命名\n如：100000000.json，否则可能无法正确识别，如果误触可发送任意消息取消导入\n${this.e?.isSr ? srTips : gsTips}`);
+    this.setContext('importLogJson');
+  }
+
+  async importLogJson() {
+    this.e.isSr = this.getContext()?.importLogJson.isSr;
     if (!this.e.file) {
-      await this.e.reply('请发送Json文件')
-      return true
+      await this.e.reply(`未检测到json文件，操作已取消，请重新发送【${this.e?.isSr ? '*' : '#'}json导入记录】`);
     }
-
-    await new ExportLog(this.e).logJson()
+    else {
+      await new ExportLog(this.e).logJson();
+    }
+    this.finish('importLogJson');
   }
 
   async help() {
-    await this.e.reply(segment.image(`file:///${_path}/resources/logHelp/记录帮助.png`))
+    await this.e.reply(segment.image(`file://${_path}/resources/logHelp/记录帮助.png`))
   }
 
   async helpPort() {
     let msg = this.e.msg.replace(/#|帮助/g, '')
 
     if (['电脑', 'pc'].includes(msg)) {
-      await this.e.reply(segment.image(`file:///${_path}/resources/logHelp/记录帮助-电脑.png`))
+      await this.e.reply(segment.image(`file://${_path}/resources/logHelp/记录帮助-电脑.png`))
     } else if (['安卓'].includes(msg)) {
       await this.e.reply(`安卓抽卡记录获取教程：${this.androidUrl}`)
     } else if (['苹果', 'ios'].includes(msg)) {
-      await this.e.reply(segment.image(`file:///${_path}/resources/logHelp/记录帮助-苹果.png`))
+      await this.e.reply(segment.image(`file://${_path}/resources/logHelp/记录帮助-苹果.png`))
     }
   }
-  srHead = (url, data) => {
-    let name = url
-    if (this.e.isSr) {
-      name = `StarRail/${url}`
-      data.tplFile = `./plugins/genshin/resources/StarRail/html/${url}/${url}.html`
-      data.headStyle = `<style> .head_box { background: url(${this._path}/plugins/genshin/resources/StarRail/img/worldcard/星穹列车.png) #fff; background-position-x: -10px; background-repeat: no-repeat; background-size: 540px; background-position-y: -100px; </style>`
-    }
-    return name
-  }
+
   async logCount() {
     let data = await new LogCount(this.e).count()
     if (!data) return
-    let url = this.srHead('logCount', data)
-    let img = await puppeteer.screenshot(url, data)
+    let img = await puppeteer.screenshot(`${data.srtempFile}logCount`, data)
     if (img) await this.reply(img)
   }
 }
