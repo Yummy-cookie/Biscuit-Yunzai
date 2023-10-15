@@ -1,5 +1,6 @@
 import md5 from 'md5'
 import fetch from 'node-fetch'
+import lodash from 'lodash'
 import cfg from '../../../../lib/config/config.js'
 import apiTool from './apiTool.js'
 
