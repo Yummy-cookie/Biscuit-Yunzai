@@ -24,7 +24,7 @@ export default class MysSign extends base {
     if (e.msg.includes('force')) mysSign.force = true
 
     /** 获取个人ck */
-    let ck = gsCfg.getBingCkSingle(e.user_id)
+    let ck = user.getUidData(e.user_id)
 
     if (lodash.isEmpty(ck)) {
       e.reply('无法签到，请先#绑定cookie\n发送【cookie帮助】查看配置教程', false, { at: true })
@@ -63,7 +63,7 @@ export default class MysSign extends base {
     ck.region_name=ck.region_name ?? '原神'
     this.mysApi = new MysApi(ck.uid, ck.ck, { log: isLog, device_id: ck.device_id },this.isSr)
     this.key = `${this.prefix}isSign:${this.mysApi.uid}`
-    this.log = `[uid:${ck.uid}][qq:${lodash.padEnd(user.getUidData, 10, ' ')}]`
+    this.log = `[uid:${ck.uid}][qq:${lodash.padEnd(this.e.user_id, 10, ' ')}]`
 
     let isSigned = await redis.get(this.key)
     if (isSigned && this.isTask && !this.force) {
@@ -111,7 +111,7 @@ export default class MysSign extends base {
     this.signInfo = signInfo.data
 
     if (this.signInfo.is_sign && !this.force) {
-      // logger.mark(`[原神已签到][uid:${this.mysApi.uid}][qq:${lodash.padEnd(this.getCookie,11,' ')}]`)
+      // logger.mark(`[原神已签到][uid:${this.mysApi.uid}][qq:${lodash.padEnd(this.e.user_id,11,' ')}]`)
       let reward = await this.getReward(this.signInfo.total_sign_day)
       this.setCache(this.signInfo.total_sign_day)
       return {
@@ -287,7 +287,7 @@ export default class MysSign extends base {
       if (!ck || !ck.qq) continue
       if (ck.autoSign === false) continue
 
-      user.getUidData = ck.qq
+      this.e.user_id = ck.qq
 
       let ret = await this.doSign(ck, false)
       if (ret.retcode === 0) {
@@ -376,7 +376,7 @@ export default class MysSign extends base {
     }
 
     /** 获取个人ck */
-    let uidData = user.getUidData('', this.e)
+    let ck = user.getUidData(this.e.user_id)
 
     if (lodash.isEmpty(ck)) {
       await this.e.reply(`${model}签到失败，请先#绑定cookie\n发送【cookie帮助】查看配置教程`, false, { at: true })
@@ -396,7 +396,7 @@ export default class MysSign extends base {
 
     if (lodash.isEmpty(autoCk)) return
 
-    gsCfg.saveBingCk(user.getUidData, ck)
+    gsCfg.saveBingCk(this.e.user_id, ck)
 
     let msg = `uid:${autoCk.uid}，原神自动签到已${model}`
     if (model == '开启') {
