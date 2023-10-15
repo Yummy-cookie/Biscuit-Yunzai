@@ -1,5 +1,5 @@
 import lodash from 'lodash'
-import { Format } from '#miao'
+import { Format } from '#yunzai'
 
 export const mainAttr = {
   3: 'atk,def,hp,cpct,cdmg,heal,effPct'.split(','),
