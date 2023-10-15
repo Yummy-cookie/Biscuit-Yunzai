@@ -1,4 +1,4 @@
-import { Data } from '#miao'
+import { Data } from '#yunzai'
 import lodash from 'lodash'
 import artisBuffs from './calc.js'
 
