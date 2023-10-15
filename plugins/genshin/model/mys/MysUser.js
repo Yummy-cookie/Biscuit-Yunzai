@@ -13,7 +13,7 @@ import MysUtil from './MysUtil.js'
 import lodash from 'lodash'
 import fetch from 'node-fetch'
 import { MysUserDB, UserDB } from '../db/index.js'
-import { Data } from '../../../miao-plugin/components/index.js'
+import { Data } from '../../../genshin/system/components/index.js'
 
 const tables = {
   // ltuid-uid 查询表
