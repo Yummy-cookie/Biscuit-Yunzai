@@ -4,10 +4,13 @@ import fs from 'node:fs'
 import { promisify } from 'node:util'
 import lodash from 'lodash'
 import MysInfo from './mys/mysInfo.js'
+import NoteUser from './mys/NoteUser.js'
+import MysUser from './mys/MysUser.js'
 
 /** 配置文件 */
 class GsCfg {
-  constructor () {
+  constructor() {
+    this.isSr = false
     /** 默认设置 */
     this.defSetPath = './plugins/genshin/defSet/'
     this.defSet = {}
@@ -22,16 +25,20 @@ class GsCfg {
     this.ignore = ['mys.pubCk', 'gacha.set', 'bot.help', 'role.name']
   }
 
+  get element() {
+    return { ...this.getdefSet('element', 'role'), ...this.getdefSet('element', 'weapon') }
+  }
+
   /**
    * @param app  功能
    * @param name 配置文件名称
    */
-  getdefSet (app, name) {
+  getdefSet(app, name) {
     return this.getYaml(app, name, 'defSet')
   }
 
   /** 用户配置 */
-  getConfig (app, name) {
+  getConfig(app, name) {
     if (this.ignore.includes(`${app}.${name}`)) {
       return this.getYaml(app, name, 'config')
     }
@@ -45,7 +52,7 @@ class GsCfg {
    * @param name 名称
    * @param type 默认跑配置-defSet，用户配置-config
    */
-  getYaml (app, name, type) {
+  getYaml(app, name, type) {
     let file = this.getFilePath(app, name, type)
     let key = `${app}.${name}`
 
@@ -53,7 +60,7 @@ class GsCfg {
 
     try {
       this[type][key] = YAML.parse(
-          fs.readFileSync(file, 'utf8')
+        fs.readFileSync(file, 'utf8')
       )
     } catch (error) {
       logger.error(`[${app}][${name}] 格式错误 ${error}`)
@@ -65,13 +72,13 @@ class GsCfg {
     return this[type][key]
   }
 
-  getFilePath (app, name, type) {
+  getFilePath(app, name, type) {
     if (type == 'defSet') return `${this.defSetPath}${app}/${name}.yaml`
     else return `${this.configPath}${app}.${name}.yaml`
   }
 
   /** 监听配置文件 */
-  watch (file, app, name, type = 'defSet') {
+  watch(file, app, name, type = 'defSet') {
     let key = `${app}.${name}`
 
     if (this.watcher[type][key]) return
@@ -88,72 +95,47 @@ class GsCfg {
     this.watcher[type][key] = watcher
   }
 
-  get element () {
-    return { ...this.getdefSet('element', 'role'), ...this.getdefSet('element', 'weapon') }
-  }
-
   /** 读取所有用户绑定的ck */
-  async getBingCk () {
+  async getBingCk(game = 'gs') {
     let ck = {}
     let ckQQ = {}
     let noteCk = {}
-    let dir = './data/MysCookie/'
-    let files = fs.readdirSync(dir).filter(file => file.endsWith('.yaml'))
 
-    const readFile = promisify(fs.readFile)
-
-    let promises = []
-
-    files.forEach((v) => promises.push(readFile(`${dir}${v}`, 'utf8')))
-
-    const res = await Promise.all(promises)
-
-    res.forEach((v) => {
-      let tmp = YAML.parse(v)
-      let qq
-      lodash.forEach(tmp, (item, uid) => {
-        qq = item.qq
-        ck[String(uid)] = item
-        if (item.isMain && !ckQQ[String(item.qq)]) {
-          ckQQ[String(item.qq)] = item
-        }
+    await NoteUser.forEach(async function (user) {
+      let qq = user.qq + ''
+      let tmp = {}
+      lodash.forEach(user.mysUsers, (mys) => {
+        let uids = mys.getUids(game)
+        lodash.forEach(uids, (uid) => {
+          let ckData = mys.getCkInfo(game)
+          ckData.qq = qq
+          if (!ck[uid]) {
+            ck[uid] = ckData
+            ckQQ[qq] = ckData
+          }
+          tmp[uid] = ckData
+        })
       })
-      if (qq && !ckQQ[String(qq)]) {
-        ckQQ[String(qq)] = Object.values(tmp)[0]
-      }
-      noteCk[String(qq)] = tmp
+      noteCk[qq] = tmp
     })
-
     return { ck, ckQQ, noteCk }
   }
 
   /** 获取qq号绑定ck */
-  getBingCkSingle (userId) {
-    let file = `./data/MysCookie/${userId}.yaml`
-    try {
-      let ck = fs.readFileSync(file, 'utf-8')
-      ck = YAML.parse(ck)
-      return ck
-    } catch (error) {
-      return {}
-    }
+  getBingCkSingle(userId) {
+    console.log('gsCfg.getBingCkSingle() 即将废弃')
+    return {}
   }
 
-  saveBingCk (userId, data) {
-    let file = `./data/MysCookie/${userId}.yaml`
-    if (lodash.isEmpty(data)) {
-      fs.existsSync(file) && fs.unlinkSync(file)
-    } else {
-      let yaml = YAML.stringify(data)
-      fs.writeFileSync(file, yaml, 'utf8')
-    }
+  saveBingCk(userId, data) {
+    console.log('gsCfg.saveBingCk() 即将废弃')
   }
 
   /**
    * 原神角色id转换角色名字
    */
-  roleIdToName (id) {
-    let name = this.getdefSet('role', 'name')
+  roleIdToName(id) {
+    let name = this.getdefSet('role', this.isSr ? 'sr_name' : 'name')
     if (name[id]) {
       return name[id][0]
     }
@@ -164,7 +146,7 @@ class GsCfg {
   /**
    * 原神武器id转换成武器名字
    */
-  getWeaponDataByWeaponHash (hash) {
+  getWeaponDataByWeaponHash(hash) {
     let data = this.getdefSet('weapon', 'data')
     let weaponData = {}
     weaponData.name = data.Name[hash]
@@ -174,20 +156,22 @@ class GsCfg {
   }
 
   /** 原神角色别名转id */
-  roleNameToID (keyword) {
+  roleNameToID(keyword, isSr) {
+    if (isSr) this.isSr = isSr
     if (!isNaN(keyword)) keyword = Number(keyword)
     this.getAbbr()
-    let roelId = this.nameID.get(String(keyword))
+    let roelId = this[this.isSr ? 'sr_nameID' : 'nameID'].get(String(keyword))
     return roelId || false
   }
 
   /** 获取角色别名 */
-  getAbbr () {
-    if (this.nameID) return
+  getAbbr() {
+    if (this[this.isSr ? 'sr_nameID' : 'nameID']) return
 
     this.nameID = new Map()
-
+    this.sr_nameID = new Map()
     let nameArr = this.getdefSet('role', 'name')
+    let sr_nameArr = this.getdefSet('role', 'sr_name')
     let nameArrUser = this.getConfig('role', 'name')
 
     let nameID = {}
@@ -199,6 +183,13 @@ class GsCfg {
       }
     }
 
+    for (let i in sr_nameArr) {
+      nameID[sr_nameArr[i][0]] = i
+      for (let abbr of sr_nameArr[i]) {
+        this.sr_nameID.set(String(abbr), i)
+      }
+    }
+
     for (let i in nameArrUser) {
       for (let abbr of nameArrUser[i]) {
         this.nameID.set(String(abbr), nameID[i])
@@ -207,8 +198,8 @@ class GsCfg {
   }
 
   /** 返回所有别名，包括用户自定义的 */
-  getAllAbbr () {
-    let nameArr = this.getdefSet('role', 'name')
+  getAllAbbr() {
+    let nameArr = this.getdefSet('role', this.isSr ? 'sr_name' : 'name')
     let nameArrUser = this.getConfig('role', 'name')
 
     for (let i in nameArrUser) {
@@ -224,7 +215,7 @@ class GsCfg {
    * @param name 名称
    * @param isWeapon 是否武器
    */
-  shortName (name, isWeapon = false) {
+  shortName(name, isWeapon = false) {
     let other = {}
     if (isWeapon) {
       other = this.getdefSet('weapon', 'other')
@@ -235,12 +226,12 @@ class GsCfg {
   }
 
   /** 公共配置ck文件修改hook */
-  async change_myspubCk () {
+  async change_myspubCk() {
     await MysInfo.initCache()
     await MysInfo.initPubCk()
   }
 
-  getGachaSet (groupId = '') {
+  getGachaSet(groupId = '') {
     let config = this.getYaml('gacha', 'set', 'config')
     let def = config.default
     if (config[groupId]) {
@@ -249,7 +240,7 @@ class GsCfg {
     return def
   }
 
-  getMsgUid (msg) {
+  getMsgUid(msg) {
     let ret = /[1|2|5-9][0-9]{8}/g.exec(msg)
     if (!ret) return false
     return ret[0]
@@ -264,12 +255,13 @@ class GsCfg {
    * @return alias 当前别名
    * @return uid 游戏uid
    */
-  getRole (msg, filterMsg = '') {
+  getRole(msg, filterMsg = '', isSr = false) {
     let alias = msg.replace(/#|老婆|老公|[1|2|5-9][0-9]{8}/g, '').trim()
     if (filterMsg) {
       alias = alias.replace(new RegExp(filterMsg, 'g'), '').trim()
     }
 
+    this.isSr = isSr
     /** 判断是否命中别名 */
     let roleId = this.roleNameToID(alias)
     if (!roleId) return false
@@ -284,7 +276,7 @@ class GsCfg {
     }
   }
 
-  cpCfg (app, name) {
+  cpCfg(app, name) {
     if (!fs.existsSync('./plugins/genshin/config')) {
       fs.mkdirSync('./plugins/genshin/config')
     }
@@ -298,7 +290,7 @@ class GsCfg {
   /**
    * 根据角色名获取对应的元素类型
    */
-  getElementByRoleName (roleName) {
+  getElementByRoleName(roleName) {
     let element = this.getdefSet('element', 'role')
     if (element[roleName]) {
       return element[roleName]
@@ -308,7 +300,7 @@ class GsCfg {
   /**
    * 根据技能id获取对应的技能数据,角色名用于命座加成的技能等级
    */
-  getSkillDataByskillId (skillId, roleName) {
+  getSkillDataByskillId(skillId, roleName) {
     let skillMap = this.getdefSet('skill', 'data')
     let skillData = {}
     if (skillMap.Name[skillId]) {
@@ -323,7 +315,7 @@ class GsCfg {
     return skillData
   }
 
-  fightPropIdToName (propId) {
+  fightPropIdToName(propId) {
     let propMap = this.getdefSet('prop', 'prop')
     if (propMap[propId]) {
       return propMap[propId]
@@ -331,7 +323,7 @@ class GsCfg {
     return ''
   }
 
-  getRoleTalentByTalentId (talentId) {
+  getRoleTalentByTalentId(talentId) {
     let talentMap = this.getdefSet('role', 'talent')
     let talent = {}
     if (talentMap.Name[talentId]) {
