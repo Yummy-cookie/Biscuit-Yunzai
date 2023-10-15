@@ -126,7 +126,7 @@ export default class MysApi {
     return res
   }
 
-  getHeaders (query = '', body = '') {
+  getHeaders (query = '', body = '', sign = false) {
     const cn = {
       app_version: '2.40.1',
       User_Agent: `Mozilla/5.0 (Linux; Android 12; ${this.device}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.73 Mobile Safari/537.36 miHoYoBBS/2.40.1`,
