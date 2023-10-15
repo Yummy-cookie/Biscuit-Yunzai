@@ -11,7 +11,7 @@ import moment from 'moment'
 let textArr = {}
 
 export class add extends plugin {
-  constructor () {
+  constructor() {
     super({
       name: '添加表情',
       dsc: '添加表情，文字等',
@@ -44,7 +44,7 @@ export class add extends plugin {
     this.isGlobal = false
   }
 
-  async init () {
+  async init() {
     if (!fs.existsSync(this.path)) {
       fs.mkdirSync(this.path)
     }
@@ -53,7 +53,7 @@ export class add extends plugin {
     }
   }
 
-  async accept () {
+  async accept() {
     /** 处理消息 */
     if (this.e.atBot && this.e.msg && this.e?.msg.includes('添加') && !this.e?.msg.includes('#')) {
       this.e.msg = '#' + this.e.msg
@@ -61,12 +61,12 @@ export class add extends plugin {
   }
 
   /** 群号key */
-  get grpKey () {
+  get grpKey() {
     return `Yz:group_id:${this.e.user_id}`
   }
 
   /** #添加 */
-  async add () {
+  async add() {
     this.isGlobal = this.e?.msg.includes("全局");
     await this.getGroupId()
 
@@ -94,7 +94,7 @@ export class add extends plugin {
   }
 
   /** 获取群号 */
-  async getGroupId () {
+  async getGroupId() {
     /** 添加全局表情，存入到机器人qq文件中 */
     if (this.isGlobal) {
       this.group_id = this.e.bot.uin;
@@ -117,7 +117,7 @@ export class add extends plugin {
     return false
   }
 
-  checkAuth () {
+  checkAuth() {
     if (this.e.isMaster) return true
 
     let groupCfg = cfg.getGroup(this.group_id)
@@ -146,7 +146,7 @@ export class add extends plugin {
     return true
   }
 
-  checkKeyWord () {
+  checkKeyWord() {
     if (this.e.img && this.e.img.length > 1) {
       this.e.reply('添加错误：只能发送一个表情当关键词')
       return false
@@ -169,7 +169,7 @@ export class add extends plugin {
   }
 
   /** 单独添加 */
-  async singleAdd () {
+  async singleAdd() {
     if (this.e.message.length != 2) return false
     let msg = lodash.keyBy(this.e.message, 'type')
     if (!this.e.msg || !msg.image) return false
@@ -192,7 +192,7 @@ export class add extends plugin {
   }
 
   /** 获取添加关键词 */
-  getKeyWord () {
+  getKeyWord() {
     this.e.isGlobal = this.e.msg.includes("全局");
 
     this.keyWord = this.e.toString()
@@ -212,7 +212,7 @@ export class add extends plugin {
   }
 
   /** 过滤别名 */
-  trimAlias (msg) {
+  trimAlias(msg) {
     let groupCfg = cfg.getGroup(this.group_id)
     let alias = groupCfg.botAlias
     if (!Array.isArray(alias)) {
@@ -228,7 +228,7 @@ export class add extends plugin {
   }
 
   /** 添加内容 */
-  async addContext () {
+  async addContext() {
     this.isGlobal = this.e.isGlobal || this.getContext()?.addContext?.isGlobal;
     await this.getGroupId()
     /** 关键词 */
@@ -285,7 +285,7 @@ export class add extends plugin {
   }
 
   /** 添加成功回复消息 */
-  getRetMsg () {
+  getRetMsg() {
     let retMsg = this.getContext()
     let msg = ''
     if (retMsg?.addContext?.message) {
@@ -314,7 +314,7 @@ export class add extends plugin {
     return lodash.compact(msg)
   }
 
-  saveJson () {
+  saveJson() {
     let obj = {}
     for (let [k, v] of textArr[this.group_id]) {
       obj[k] = v
@@ -335,7 +335,7 @@ export class add extends plugin {
     );
   }
 
-  async saveImg (url, keyWord) {
+  async saveImg(url, keyWord) {
     let groupCfg = cfg.getGroup(this.group_id)
     let savePath = `${this.facePath}${this.group_id}/`
 
@@ -373,7 +373,7 @@ export class add extends plugin {
     return savePath
   }
 
-  async getText () {
+  async getText() {
     if (!this.e.message) return false
 
     this.isGlobal = false
@@ -395,7 +395,7 @@ export class add extends plugin {
 
     let num = 0
     if (isNaN(keyWord)) {
-      num = keyWord.charAt(keyWord.length - 1)
+      num = keyWord.trim().match(/[0-9]+$/)?.[0]
 
       if (!isNaN(num) && !textArr[this.group_id].has(keyWord) && !textArr[this.e.bot.uin].has(keyWord)) {
         keyWord = lodash.trimEnd(keyWord, num).trim()
@@ -408,8 +408,8 @@ export class add extends plugin {
     if (lodash.isEmpty(msg) && lodash.isEmpty(globalMsg)) return false
 
     msg = [...msg, ...globalMsg]
-
-    if (num >= 0 && num < msg.length) {
+    /** 如果只有一个则不随机 */
+    if (num >= 0 && msg.length === 1) {
       msg = msg[num]
     } else {
       /** 随机获取一个 */
@@ -444,7 +444,7 @@ export class add extends plugin {
     return true
   }
 
-  expiredMsg (keyWord, num) {
+  expiredMsg(keyWord, num) {
     logger.mark(`[发送表情]${this.e.logText} ${keyWord} 表情已过期失效`)
 
     let arr = textArr[this.group_id].get(keyWord)
@@ -460,7 +460,7 @@ export class add extends plugin {
   }
 
   /** 初始化已添加内容 */
-  initTextArr () {
+  initTextArr() {
     if (textArr[this.group_id]) return
 
     textArr[this.group_id] = new Map()
@@ -566,7 +566,7 @@ export class add extends plugin {
     }
   }
 
-  async del () {
+  async del() {
     this.isGlobal = this.e?.msg.includes("全局");
     await this.getGroupId()
     if (!this.group_id) return false
@@ -650,14 +650,14 @@ export class add extends plugin {
         img = item[0]
       }
       if (img.local) {
-        fs.unlink(img.local, () => {})
+        fs.unlink(img.local, () => { })
       }
     })
 
     this.saveJson()
   }
 
-  async list () {
+  async list() {
     this.isGlobal = this.e?.msg.includes("全局");
 
     let page = 1
@@ -705,48 +705,56 @@ export class add extends plugin {
       return
     }
 
-    let msg = []
-    let num = 0
+    let msg = [], result = [], num = 0
     for (let i in arr) {
       if (num >= page * pageSize) break
 
       let keyWord = await this.keyWordTran(arr[i].key)
       if (!keyWord) continue
-
       if (Array.isArray(keyWord)) {
-        keyWord.unshift(`${arr[i].num}、`)
-        keyWord.push('\n')
-        keyWord.forEach(v => msg.push(v))
+        keyWord.unshift(`${num + 1}、`)
+       // keyWord.push('\n')
+        keyWord.push(v => msg.push(v))
       } else if (keyWord.type) {
-        msg.push(`\n${arr[i].num}、`, keyWord, '\n\n')
+        msg.push(`\n${num + 1}、`, keyWord)
       } else {
-        msg.push(`${arr[i].num}、${keyWord}\n`)
+        msg.push(`${num + 1}、`, keyWord)
       }
       num++
     }
-
-    if (type == 'list' && count > 100) {
-      msg.push(`更多内容请翻页查看\n如：#表情列表${Number(page) + 1}`)
+    /** 数组分段 */
+    for (const i in msg) {
+      result.push([msg[i]])
+    }
+    /** 计算页数 */
+    let book = count / pageSize;
+  if (book % 1 === 0) {
+     book = result;
+  } else {
+    book = Math.floor(book) + 1;
+  }
+    if (type == 'list' && msg.length >= pageSize) {
+      result.push(`更多内容请翻页查看\n如：#表情列表${Number(page) + 1}`)
     }
 
-    let title = `表情列表，第${page}页，共${count}条`
+    let title = `表情列表，第${page}页，共${count}条，共${book}页`
     if (type == 'search') {
       title = `表情${search}，${count}条`
     }
 
-    let forwardMsg = await common.makeForwardMsg(this.e, [title, msg], title)
+    let forwardMsg = await common.makeForwardMsg(this.e, [title, ...result], title)
 
     this.e.reply(forwardMsg)
   }
 
   /** 分页 */
-  pagination (pageNo, pageSize, array) {
+  pagination(pageNo, pageSize, array) {
     let offset = (pageNo - 1) * pageSize
     return offset + pageSize >= array.length ? array.slice(offset, array.length) : array.slice(offset, offset + pageSize)
   }
 
   /** 关键词转换成可发送消息 */
-  async keyWordTran (msg) {
+  async keyWordTran(msg) {
     /** 图片 */
     if (msg.includes('{image')) {
       let tmp = msg.split('{image')
