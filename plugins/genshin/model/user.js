@@ -119,7 +119,10 @@ export default class User extends base {
     if (/星穹列车|Server|无名客/.test(this.region_name)) {
       msg += "\n星穹铁道支持：\n功能还在咕咕咕~"
     }
-    msg += '\n 支持绑定多个ck'
+    msg += "'星穹铁道支持：'
+      msg += '\n【*uid】当前绑定ck uid列表'
+      msg += '\n【*体力】体力信息'
+      msg += '\n【*面板】【*更新面板】面板信息'
     msg = await common.makeForwardMsg(this.e, ['使用命令说明', msg], '绑定成功：使用命令说明')
 
     await this.e.reply(msg)
@@ -134,7 +137,7 @@ export default class User extends base {
         res = roleRes
         /** 国际服的标记 */
         if (type == 'hoyolab' && typeof (param.mi18nLang) === 'string') {
-          this.ck += ` mi18nLang=${param.mi18nLang};`
+          this.ck += `mi18nLang=${param.mi18nLang};`
         }
         break
       }
