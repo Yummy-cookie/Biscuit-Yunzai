@@ -1,6 +1,6 @@
 @font-face {
   font-family: "tttgbnumber";
-  src: url("../../../../../resources/font/tttgbnumber.ttf");
+  src: url("../../font/tttgbnumber.ttf");
   font-weight: normal;
   font-style: normal;
 }
@@ -82,6 +82,13 @@ body {
 }
 .lab-item-4{
   background: #9073ba;
+  width: 6px;
+  height: 6px;
+  border-radius: 100%;
+  margin-right: 4px;
+}
+.lab-item-3{
+  background: #4c99b9;
   width: 6px;
   height: 6px;
   border-radius: 100%;
