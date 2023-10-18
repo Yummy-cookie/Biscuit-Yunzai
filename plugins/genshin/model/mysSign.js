@@ -24,7 +24,7 @@ export default class MysSign extends base {
     if (e.msg.includes('force')) mysSign.force = true
 
     /** 获取个人ck */
-    let ck = MysUser.getByQueryUid(e.user_id)
+    let ck = gsCfg.getBingCkSingle(e.user_id)
 
     if (lodash.isEmpty(ck)) {
       e.reply('无法签到，请先#绑定cookie\n发送【cookie帮助】查看配置教程', false, { at: true })
@@ -376,7 +376,7 @@ export default class MysSign extends base {
     }
 
     /** 获取个人ck */
-    let ck = MysUser.getByQueryUid(this.e.user_id)
+    let ck = gsCfg.getBingCkSingle(this.e.user_id)
 
     if (lodash.isEmpty(ck)) {
       await this.e.reply(`${model}签到失败，请先#绑定cookie\n发送【cookie帮助】查看配置教程`, false, { at: true })

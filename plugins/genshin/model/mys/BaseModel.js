@@ -1,8 +1,6 @@
 /**
  * 基础类，提供实例缓存等一些基础方法
  */
-import MysUtil from './MysUtil.js'
-
 let cacheMap = {}
 let reFn = {}
 
@@ -14,20 +12,19 @@ export default class BaseModel {
   // 获取缓存
   _getThis (model, id = '', time = 10 * 60) {
     const uuid = `${model}:${id}`
-    this._uuid = uuid
     if (uuid && cacheMap[uuid]) {
       return cacheMap[uuid]._expire(time)
     }
+    this._uuid = uuid
   }
 
   // 设置缓存
-  _cacheThis (model, id, time = 10 * 60) {
-    const uuid = this._uuid || `${model}:${id}`
-    this._uuid = uuid
-    if (uuid) {
+  _cacheThis (time = 10 * 60) {
+    let id = this._uuid
+    if (id) {
       this._expire(time)
-      cacheMap[uuid] = this
-      return cacheMap[uuid]
+      cacheMap[id] = this
+      return cacheMap[id]
     }
     return this
   }
@@ -46,24 +43,5 @@ export default class BaseModel {
       }
       return cacheMap[id]
     }
-  }
-
-  _delCache () {
-    let id = this._uuid
-    reFn[id] && clearTimeout(reFn[id])
-    delete reFn[id]
-    delete cacheMap[id]
-  }
-
-  gameKey (game = 'gs') {
-    return MysUtil.getGameKey(game)
-  }
-
-  isGs (game = 'gs') {
-    return this.gameKey(game) === 'gs'
-  }
-
-  isSr (game = 'gs') {
-    return this.gameKey(game) === 'sr'
   }
 }
