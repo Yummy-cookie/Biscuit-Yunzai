@@ -117,12 +117,12 @@ export default class User extends base {
       msg += '\n【#删除ck】删除当前绑定ck'
     }
     if (/星穹列车|Server|无名客/.test(this.region_name)) {
-      msg += "\n星穹铁道支持：\n功能还在咕咕咕~"
-    }
-    msg += "'星穹铁道支持：'
+      msg += '星穹铁道支持：'
       msg += '\n【*uid】当前绑定ck uid列表'
       msg += '\n【*体力】体力信息'
       msg += '\n【*面板】【*更新面板】面板信息'
+    }
+    msg += '\n 支持绑定多个ck'
     msg = await common.makeForwardMsg(this.e, ['使用命令说明', msg], '绑定成功：使用命令说明')
 
     await this.e.reply(msg)
