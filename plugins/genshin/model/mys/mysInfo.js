@@ -376,6 +376,7 @@ export default class MysInfo {
       case -1002:
         if (res.api === 'detail') res.retcode = 0
         break
+      case 5003:
       case 1034:
         logger.mark(`[米游社查询失败][uid:${this.uid}][qq:${this.userId}] 遇到验证码`)
         this.e.reply('米游社查询遇到验证码，请稍后再试')
@@ -391,6 +392,47 @@ export default class MysInfo {
     await this.ckUser.addQueryUid(this.uid)
     return res
   }
+
+/** 刷新米游社验证 */
+    async bbsVerification () {
+      let create = await MysInfo.get(this.e, 'createVerification')
+      if (!create || create.retcode !== 0) return false
+  
+      let verify = await MysInfo.verify(this.e, { uid: this.uid, ...create.data })
+      if (!verify) return false
+  
+      let submit = await MysInfo.get(this.e, 'verifyVerification', verify)
+      if (!submit || submit.retcode !== 0) return false
+  
+      return true
+    }
+  
+    /** 手动验证 */
+    static async verify (e, data) {
+      if (!data.gt || !data.challenge || !e?.reply) return false
+      let cfg = { ...GsCfg.getdefSet('mys', 'set'), ...GsCfg.getYaml('mys', 'set', 'config') }
+      if (!cfg.verify || !cfg.verifyAddr) return false
+  
+      /** 传递gt、challenge参数，返回link、result地址 */
+      let res = await fetch(cfg.verifyAddr, {
+        method: 'POST',
+        body: JSON.stringify(data)
+      })
+      res = await res.json()
+      if (!res.data) return false
+  
+      await e.reply(`请打开地址并完成验证\n${res.data.link}`, true)
+      for (let i = 0; i < 60; i++) {
+        let validate = await fetch(res.data.result)
+        validate = await validate.json()
+        if (validate.data) {
+          logger.mark(`[米游社验证成功][uid:${e.uid || data.uid}][qq:${e.user_id}]`)
+          return validate.data
+        }
+        await common.sleep(2000)
+      }
+      return false
+    }
 
   /** 删除失效ck */
   async delCk() {
