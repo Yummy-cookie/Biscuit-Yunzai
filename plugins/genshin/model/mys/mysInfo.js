@@ -348,30 +348,28 @@ export default class MysInfo {
         if (/(登录|login)/i.test(res.message)) {
           if (this.ckInfo.uid) {
             logger.mark(`[ck失效][uid:${this.uid}][qq:${this.userId}]`)
-            if (!isTask) this.e.reply(`UID:${this.ckInfo.uid}，米游社cookie已失效`)
+            this.e.reply(`UID:${this.ckInfo.uid}，米游社cookie已失效`)
           } else {
             logger.mark(`[公共ck失效][ltuid:${this.ckInfo.ltuid}]`)
-            if (!isTask) this.e.reply('米游社查询失败，请稍后再试')
+            this.e.reply('米游社查询失败，请稍后再试')
           }
-          if (!isTask) await this.delCk()
+          await this.delCk()
         } else {
-          if (!isTask) this.e.reply(`米游社接口报错，暂时无法查询：${res.message}`)
+          this.e.reply(`米游社接口报错，暂时无法查询：${res.message}`)
         }
         break
       case 1008:
-        if (!isTask) this.e.reply('\n请先去米游社绑定角色', false, { at: this.userId })
+        this.e.reply('\n请先去米游社绑定角色', false, { at: this.userId })
         break
       case 10101:
-        if (!isTask) {
-          await this.disableToday()
-          this.e.reply('查询已达今日上限')
-        }
+        await this.disableToday()
+        this.e.reply('查询已达今日上限')
         break
       case 10102:
         if (res.message === 'Data is not public for the user') {
-          if (!isTask) this.e.reply(`\nUID:${this.uid}，米游社数据未公开`, false, { at: this.userId })
+          this.e.reply(`\nUID:${this.uid}，米游社数据未公开`, false, { at: this.userId })
         } else {
-          if (!isTask) this.e.reply(`uid:${this.uid}，请先去米游社绑定角色`)
+          this.e.reply(`uid:${this.uid}，请先去米游社绑定角色`)
         }
         break
       // 伙伴不存在~
@@ -379,24 +377,24 @@ export default class MysInfo {
         if (res.api === 'detail') res.retcode = 0
         break
       case 1034:
-        if (await this.bbsVerification()) {
+      case 5003:
+      if (await this.bbsVerification()) {
           return 'repeat'
         }
         logger.mark(`[米游社查询失败][uid:${this.uid}][qq:${this.userId}] 遇到验证码`)
-        if (!isTask) this.e.reply('米游社查询遇到验证码，请稍后再试')
+        this.e.reply('米游社查询遇到验证码，请稍后再试')
         break
       default:
-        if (!isTask) this.e.reply(`米游社接口报错，暂时无法查询：${res.message || 'error'}`)
+        this.e.reply(`米游社接口报错，暂时无法查询：${res.message || 'error'}`)
         break
     }
     if (res.retcode !== 0) {
       logger.mark(`[mys接口报错]${JSON.stringify(res)}，uid：${this.uid}`)
     }
     // 添加请求记录
-    if (!isTask) await this.ckUser.addQueryUid(this.uid)
+    await this.ckUser.addQueryUid(this.uid)
     return res
   }
-
 /** 刷新米游社验证 */
     async bbsVerification () {
       let create = await MysInfo.get(this.e, 'createVerification')
