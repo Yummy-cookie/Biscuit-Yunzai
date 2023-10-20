@@ -120,14 +120,6 @@ export default class apiTool {
                     body: { act_id: 'e202009291139501', region: this.server, uid: this.uid },
                     sign: true
                     },
-      createVerification: {
-        url: 'https://api-takumi-record.mihoyo.com/game_record/app/card/wapi/createVerification',
-        query: 'is_high=true'
-      },
-      verifyVerification: {
-        url: 'https://api-takumi-record.mihoyo.com/game_record/app/card/wapi/verifyVerification',
-        body: data
-      },
         /**使用兑换码 目前仅限国际服,来自于国服的uid请求已在myinfo.js的init方法提前拦截 */
         useCdk: {
           url: 'PLACE_HOLDER',

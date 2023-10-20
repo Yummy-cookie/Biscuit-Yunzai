@@ -324,9 +324,9 @@ export default class MysInfo {
     return true
   }
 
-  async checkCode(res, type) {
+  async checkCode (res, type, mysApi = {}, data = {}, isTask = false) {
     if (!res) {
-      this.e.reply('米游社接口请求失败，暂时无法查询')
+      if (!isTask) this.e.reply('米游社接口请求失败，暂时无法查询')
       return false
     }
 
@@ -337,7 +337,7 @@ export default class MysInfo {
       }
     }
 
-        switch (res.retcode) {
+    switch (res.retcode) {
       case 0:
         break
       case -1:
@@ -348,94 +348,63 @@ export default class MysInfo {
         if (/(登录|login)/i.test(res.message)) {
           if (this.ckInfo.uid) {
             logger.mark(`[ck失效][uid:${this.uid}][qq:${this.userId}]`)
-            this.e.reply(`UID:${this.ckInfo.uid}，米游社cookie已失效`)
+            if (!isTask) this.e.reply(`UID:${this.ckInfo.uid}，米游社cookie已失效`)
           } else {
             logger.mark(`[公共ck失效][ltuid:${this.ckInfo.ltuid}]`)
-            this.e.reply('米游社查询失败，请稍后再试')
+            if (!isTask) this.e.reply('米游社查询失败，请稍后再试')
           }
-          await this.delCk()
+          if (!isTask) await this.delCk()
         } else {
-          this.e.reply(`米游社接口报错，暂时无法查询：${res.message}`)
+          if (!isTask) this.e.reply(`米游社接口报错，暂时无法查询：${res.message}`)
         }
         break
       case 1008:
-        this.e.reply('\n请先去米游社绑定角色', false, { at: this.userId })
+        if (!isTask) this.e.reply('\n请先去米游社绑定角色', false, { at: this.userId })
         break
       case 10101:
-        await this.disableToday()
-        this.e.reply('查询已达今日上限')
+        if (!isTask) {
+          await this.disableToday()
+          this.e.reply('查询已达今日上限')
+        }
         break
       case 10102:
         if (res.message === 'Data is not public for the user') {
-          this.e.reply(`\nUID:${this.uid}，米游社数据未公开`, false, { at: this.userId })
+          if (!isTask) this.e.reply(`\nUID:${this.uid}，米游社数据未公开`, false, { at: this.userId })
         } else {
-          this.e.reply(`uid:${this.uid}，请先去米游社绑定角色`)
+          if (!isTask) this.e.reply(`uid:${this.uid}，请先去米游社绑定角色`)
         }
         break
       // 伙伴不存在~
       case -1002:
         if (res.api === 'detail') res.retcode = 0
         break
-      case 1034:
       case 5003:
-      if (await this.bbsVerification()) {
-          return 'repeat'
+      case 1034:
+        let handler = this.e.runtime?.handler || {}
+
+        // 如果有注册的mys.req.err，调用
+        if (handler.has('mys.req.err')) {
+          logger.mark(`[米游社查询][uid:${this.uid}][qq:${this.userId}] 遇到验证码，尝试调用 Handler mys.req.err`)
+          res = await handler.call('mys.req.err', this.e, { mysApi, type, res, data, mysInfo: this }) || res
         }
-        logger.mark(`[米游社查询失败][uid:${this.uid}][qq:${this.userId}] 遇到验证码`)
-        this.e.reply('米游社查询遇到验证码，请稍后再试')
+
+        if (!res || res?.retcode == 1034) {
+          logger.mark(`[米游社查询失败][uid:${this.uid}][qq:${this.userId}] 遇到验证码`)
+          if (!isTask) this.e.reply('米游社查询遇到验证码，请稍后再试')
+        }
         break
       default:
-        this.e.reply(`米游社接口报错，暂时无法查询：${res.message || 'error'}`)
+        if (!isTask) this.e.reply(`米游社接口报错，暂时无法查询：${res.message || 'error'}`)
         break
     }
     if (res.retcode !== 0) {
       logger.mark(`[mys接口报错]${JSON.stringify(res)}，uid：${this.uid}`)
     }
     // 添加请求记录
-    await this.ckUser.addQueryUid(this.uid)
+    if (!isTask) await this.ckUser.addQueryUid(this.uid)
     return res
   }
-/** 刷新米游社验证 */
-    async bbsVerification () {
-      let create = await MysInfo.get(this.e, 'createVerification')
-      if (!create || create.retcode !== 0) return false
   
-      let verify = await MysInfo.verify(this.e, { uid: this.uid, ...create.data })
-      if (!verify) return false
-  
-      let submit = await MysInfo.get(this.e, 'verifyVerification', verify)
-      if (!submit || submit.retcode !== 0) return false
-  
-      return true
-    }
-  
-    /** 手动验证 */
-    static async verify (e, data) {
-      if (!data.gt || !data.challenge || !e?.reply) return false
-      let cfg = { ...GsCfg.getdefSet('mys', 'set'), ...GsCfg.getYaml('mys', 'set', 'config') }
-      if (!cfg.verify || !cfg.verifyAddr) return false
-  
-      /** 传递gt、challenge参数，返回link、result地址 */
-      let res = await fetch(cfg.verifyAddr, {
-        method: 'POST',
-        body: JSON.stringify(data)
-      })
-      res = await res.json()
-      if (!res.data) return false
-  
-      await e.reply(`请打开地址并完成验证\n${res.data.link}`, true)
-      for (let i = 0; i < 60; i++) {
-        let validate = await fetch(res.data.result)
-        validate = await validate.json()
-        if (validate.data) {
-          logger.mark(`[米游社验证成功][uid:${e.uid || data.uid}][qq:${e.user_id}]`)
-          return validate.data
-        }
-        await common.sleep(2000)
-      }
-      return false
-    }
-
   /** 删除失效ck */
   async delCk() {
     if (!this.ckUser) {
