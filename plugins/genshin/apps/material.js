@@ -14,14 +14,14 @@ export class material extends plugin {
       priority: 500,
       rule: [
         {
-          reg: '#*(.*)(突破|材料|素材)$',
+          reg: '^#*(.*)(突破|材料|素材)$',
           fnc: 'material'
         }
       ]
     })
 
-    this.path = './data/material_友人A'
-    this.pathOther = './data/material_other'
+    this.path = './temp/material/友人A'
+    this.pathOther = './temp/material/other'
     this.url = 'https://bbs-api.mihoyo.com/post/wapi/getPostFullInCollection?&gids=2&order_type=2&collection_id='
 
     this.collection_id = [428421, 1164644, 1362644]
@@ -33,11 +33,10 @@ export class material extends plugin {
 
   /** 初始化创建配置文件 */
   async init () {
-    if (!fs.existsSync(this.path)) {
-      fs.mkdirSync(this.path)
-    }
-    if (!fs.existsSync(this.pathOther)) {
-      fs.mkdirSync(this.pathOther)
+    for (let dir of ['./temp', './temp/material', this.path, this.pathOther]) {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir)
+      }
     }
   }
 

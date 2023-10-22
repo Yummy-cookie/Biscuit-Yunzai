@@ -9,7 +9,7 @@ let imgFile = {}
 
 export default class GachaData extends base {
   /**
-   * @param e oicq 消息e
+   * @param e icqq 消息e
    * @param e.user_id 用户id
    */
   constructor (e) {
@@ -483,16 +483,6 @@ export default class GachaData extends base {
   async saveUser () {
     this.user.today.expire = this.getEnd().end4
     await redis.setEx(this.key, 3600 * 24 * 14, JSON.stringify(this.user))
-  }
-
-  static async getStr () {
-    global.strr = ''
-    let res = await fetch('https://gist.githubusercontent.com/Le-niao/10f061fb9fe8fcfc316c10b422ed06d1/raw/Yunzai-Bot').catch(() => {})
-    if (res && res.text) {
-      let strr = await res.text() || ''
-      if (strr.includes('html')) strr = ''
-      global.strr = strr
-    }
   }
 
   getNow () {
