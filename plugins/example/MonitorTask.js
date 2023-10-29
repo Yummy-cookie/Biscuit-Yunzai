@@ -7,7 +7,7 @@ import axios from "axios";
 
 let FanSkyGroup= 374248018
 let cwd = process.cwd().replace(/\\/g, "/")
-let GithubStatic = `${cwd}resources/Github/GithubStatic.json`
+let GithubStatic = `${cwd}/resources/Github1/GithubStatic.json`
 
 export class MonitorTask extends plugin {
     constructor() {
