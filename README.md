@@ -16,9 +16,9 @@
 1.克隆项目
 ```
 git clone --depth=1 https://gitee.com/Yummy-cookie/Yunzai-Bot.git 
-gitee(国内优先)
+#gitee(国内优先)
 
-git clone --depth=1 https://github.com/Yummy-cookie/Yunzai-Bot.git 
+#git clone --depth=1 https://github.com/Yummy-cookie/Yunzai-Bot.git 
 github
 ```
 ```
