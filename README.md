@@ -15,7 +15,11 @@
 
 1.克隆项目
 ```
-git clone --depth=1 https://gitee.com/Yummy-cookie/Yunzai-Bot.git
+git clone --depth=1 https://gitee.com/Yummy-cookie/Yunzai-Bot.git 
+#gitee(国内优先)
+
+#git clone --depth=1 https://github.com/Yummy-cookie/Yunzai-Bot.git 
+github
 ```
 ```
 cd Yunzai-Bot #进入Yunzai目录
@@ -92,3 +96,4 @@ pnpm run start
 ## 其他
 - 图片素材来源于网络，仅供交流学习使用
 - 严禁用于任何商业用途和非法行为
+- 赞助[点我跳转](https://biscuitawa.top/qr.png)(记得备注自己)
