@@ -1,15 +1,11 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import { PayData, renderImg } from '../model/payLogData.js'
-import NoteUser from '../model/mys/NoteUser.js'
 import url from 'url'
 import fs from 'fs'
 import path from 'path'
 import yaml from 'yaml'
 
 export class payLog extends plugin {
-  dirPath = path.resolve('./data/payLog/')
-  authKey = ''
-
   constructor () {
     super({
       name: '充值记录',
@@ -22,7 +18,7 @@ export class payLog extends plugin {
           fnc: 'payLog'
         },
         {
-          reg: '^#?更新(充值|消费)(记录|统计)$',
+          reg: '^#?更新(充值|消费)(记录|统计)',
           fnc: 'updatePayLog'
         },
         {
@@ -31,12 +27,15 @@ export class payLog extends plugin {
           fnc: 'getAuthKey'
         },
         {
-          reg: '^#?(充值|消费)(记录|统计)帮助$',
+          reg: '^#?(充值|消费)(记录|统计)帮助',
           fnc: 'payLogHelp'
         }
       ]
     })
   }
+
+  dirPath = path.resolve('./data/payLog/')
+  authKey = ''
 
   async payLog (e) {
     // 判断是否存有已经生成的数据
@@ -95,7 +94,6 @@ export class payLog extends plugin {
       return false
     }
     this.authKey = decodeURIComponent(match[1])
-
     // 获取数据
     this.reply('正在获取消费数据,可能需要30s~~')
     let data = new PayData(this.authKey)

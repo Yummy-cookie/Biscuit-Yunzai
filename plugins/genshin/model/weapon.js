@@ -45,7 +45,6 @@ export default class Weapon extends base {
     let count = {
       five: 0,
       four: 0,
-      three: 0,
       单手剑: 0,
       双手剑: 0,
       长柄武器: 0,
@@ -65,7 +64,6 @@ export default class Weapon extends base {
 
       if (val.weapon.rarity == 5) count.five++
       if (val.weapon.rarity == 4) count.four++
-      if (val.weapon.rarity == 3) count.three++
 
       count[val.weapon.type_name]++
 

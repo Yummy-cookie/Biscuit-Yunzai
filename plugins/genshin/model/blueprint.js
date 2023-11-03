@@ -14,7 +14,7 @@ export default class blueprint extends base {
     let uid = await MysInfo.getUid(this.e, false)
     if (!uid) return false
     /** 判断是否绑定了ck */
-    let ck = await MysInfo.checkUidBing(uid, this.e)
+    let ck = await MysInfo.checkUidBing(uid)
     if (!ck) {
       await this.e.reply(MysInfo.tips)
       return false
@@ -53,7 +53,7 @@ export default class blueprint extends base {
   }
 
   async computes (body) {
-    let computes = await this.mysApi.getData('blueprintCompute', { body })
+    let computes = await this.mysApi.getData('blueprintCompute', body)
     if (!computes || computes.retcode !== 0) return false
     computes = computes.data?.list
     return computes
