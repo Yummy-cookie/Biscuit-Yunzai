@@ -28,10 +28,10 @@ if [[ -z $(git status -s) ]]; then
     echo -e " ${Warn} ${YellowBG} 当前工作区有修改，尝试暂存后更新。${Font}"
     git add .
     git stash
-    git pull origin main --allow-unrelated-histories --rebase
+    git pull origin master --allow-unrelated-histories --rebase
     git stash pop
 else
-    git pull origin main --allow-unrelated-histories
+    git pull origin master --allow-unrelated-histories
 fi
 
 if [[ ! -f "$HOME/.ovo/yunzai.ok" ]]; then
@@ -45,6 +45,12 @@ fi
 echo -e "\n ================ \n ${Version} ${BlueBG} Yunzai-Bot 版本信息 ${Font} \n ================ \n"
 
 git log -1 --pretty=format:"%h - %an, %ar (%cd) : %s"
+
+if [ ! -d $MIAO_PLUGIN_PATH"/.git" ]; then
+    echo -e "\n ${Warn} ${YellowBG} 由于喵版云崽依赖miao-plugin，检测到目前没有安装，开始自动下载 ${Font} \n"
+    git clone --depth=1 https://gitee.com/yoimiya-kokomi/miao-plugin.git ./plugins/miao-plugin/
+fi
+
 
 if [ -d $MIAO_PLUGIN_PATH"/.git" ]; then
 
@@ -65,7 +71,7 @@ if [ -d $MIAO_PLUGIN_PATH"/.git" ]; then
     if [[ ! -f "$HOME/.ovo/miao.ok" ]]; then
         set -e
         echo -e "\n ================ \n ${Info} ${GreenBG} 更新 喵喵插件 运行依赖 ${Font} \n ================ \n"
-        pnpm add image-size -w
+        pnpm install -P
         touch ~/.ovo/miao.ok
         set +e
     fi
@@ -85,10 +91,10 @@ if [ -d $PY_PLUGIN_PATH"/.git" ]; then
         echo -e " ${Warn} ${YellowBG} 当前工作区有修改，尝试暂存后更新。${Font}"
         git add .
         git stash
-        git pull origin main --allow-unrelated-histories --rebase
+        git pull origin v3 --allow-unrelated-histories --rebase
         git stash pop
     else
-        git pull origin main --allow-unrelated-histories
+        git pull origin v3 --allow-unrelated-histories
     fi
 
     if [[ ! -f "$HOME/.ovo/py.ok" ]]; then
@@ -178,4 +184,11 @@ fi
 
 echo -e "\n ================ \n ${Info} ${GreenBG} 启动 Yunzai-Bot ${Font} \n ================ \n"
 
+set +e
 node app
+EXIT_CODE=$?
+
+if [[ $EXIT_CODE != 0 ]]; then
+	echo -e "\n ================ \n ${Warn} ${YellowBG} 启动 Yunzai-Bot 失败 ${Font} \n ================ \n"
+	tail -f /dev/null
+fi
