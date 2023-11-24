@@ -5,7 +5,7 @@ import path from 'path'
 import cfg from '../../lib/config/config.js'
 import axios from "axios";
 
-let FanSkyGroup= 374248018
+let FanSkyGroup= 950817968
 let cwd = process.cwd().replace(/\\/g, "/")
 let GithubStatic = `${cwd}/resources/Github1/GithubStatic.json`
 
