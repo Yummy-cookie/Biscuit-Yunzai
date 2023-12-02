@@ -27,7 +27,7 @@ export default class ProfileDmg extends Base {
       { file: 'calc', name: '喵喵' }
     ]
     for (let ds of dmgFile) {
-      let path = `${_path}/system/resources/meta-${game}/character/${name}/${ds.file}.js`
+      let path = `${_path}/plugins/genshin/system/resources/meta-${game}/character/${name}/${ds.file}.js`
       if (ds.test && !ds.test()) {
         continue
       }

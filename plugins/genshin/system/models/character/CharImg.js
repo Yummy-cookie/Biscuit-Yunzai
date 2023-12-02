@@ -6,14 +6,14 @@ import lodash from 'lodash'
 import sizeOf from 'image-size'
 import { Cfg } from '#yunzai'
 
-const rPath = `${process.cwd()}/system/resources`
+const rPath = `${process.cwd()}/plugins/genshin/system/resources`
 const CharImg = {
 
   // 获取角色的插画
   getCardImg (names, se = false, def = true) {
     let list = []
     let addImg = function (charImgPath, disable = false) {
-      let dirPath = `./system/resources/${charImgPath}`
+      let dirPath = `./plugins/genshin/system/resources/${charImgPath}`
 
       if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath)
@@ -35,7 +35,7 @@ const CharImg = {
       addImg(`character-img/${name}`)
       addImg(`character-img/${name}/upload`)
       addImg(`character-img/${name}/se`, !se)
-      const plusPath = './system/resources/miao-res-plus/'
+      const plusPath = './plugins/genshin/system/resources/miao-res-plus/'
       if (fs.existsSync(plusPath)) {
         addImg(`miao-res-plus/character-img/${name}`)
         addImg(`miao-res-plus/character-img/${name}/se`, !se)
@@ -50,7 +50,7 @@ const CharImg = {
         return false
       }
     }
-    let ret = sizeOf(`./system/resources/${img}`)
+    let ret = sizeOf(`./plugins/genshin/system/resources/${img}`)
     ret.img = img
     ret.mode = ret.width > ret.height ? 'left' : 'bottom'
     return ret

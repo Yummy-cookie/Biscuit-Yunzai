@@ -2,7 +2,7 @@ import { Data } from '#yunzai'
 import lodash from 'lodash'
 import fs from 'node:fs'
 
-const charPath = process.cwd() + '/system/resources/meta-gs/character'
+const charPath = process.cwd() + '/plugins/genshin/system/resources/meta-gs/character'
 let cfgMap = {
   char: {},
   async init () {

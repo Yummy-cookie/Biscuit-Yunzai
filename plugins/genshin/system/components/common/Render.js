@@ -17,13 +17,13 @@ const Render = {
           }
         }
         let resPath = data.pluResPath
-        const layoutPath = process.cwd() + '/system/resources/common/layout/'
+        const layoutPath = process.cwd() + '/plugins/genshin/system/resources/common/layout/'
         return {
           _miao_path: resPath,
           ...data,
           _res_path: resPath,
           _layout_path: layoutPath,
-          _tpl_path: process.cwd() + '/system/resources/common/tpl/',
+          _tpl_path: process.cwd() + '/plugins/genshin/system/resources/common/tpl/',
           defaultLayout: layoutPath + 'default.html',
           elemLayout: layoutPath + 'elem.html',
           sys: {
