@@ -1,5 +1,6 @@
 import lodash from 'lodash'
-import fs from 'fs'
+import fs from 'node:fs'
+import util from 'node:util'
 
 const _path = process.cwd()
 const getRoot = (root = '') => {
@@ -8,7 +9,7 @@ const getRoot = (root = '') => {
   } else if (root === 'root' || root === 'yunzai') {
     root = `${_path}/`
   } else if (root === 'miao') {
-    root = `${_path}/plugins/genshin/system/`
+    root = `${_path}/system/`
   } else {
     root = `${_path}/plugins/${root}/`
   }
@@ -104,7 +105,7 @@ let Data = {
     return {}
   },
 
-  async setCacheJSON (key, data, EX = 3600 * 24 * 90) {
+  async setCacheJSON (key, data, EX = 3600 * 24 * 365) {
     await redis.set(key, JSON.stringify(data), { EX })
   },
 
@@ -243,9 +244,7 @@ let Data = {
     if (lodash.isArray(data)) {
       for (let idx = 0; idx < data.length; idx++) {
         let ret = fn(data[idx], idx)
-        if (ret instanceof Promise) {
-          ret = await ret
-        }
+        ret = Data.isPromise(ret) ? await ret : ret
         if (ret === false) {
           break
         }
@@ -253,14 +252,16 @@ let Data = {
     } else if (lodash.isPlainObject(data)) {
       for (const idx in data) {
         let ret = fn(data[idx], idx)
-        if (ret instanceof Promise) {
-          ret = await ret
-        }
+        ret = Data.isPromise(ret) ? await ret : ret
         if (ret === false) {
           break
         }
       }
     }
+  },
+
+  isPromise(data){
+    return util.types.isPromise(data)
   },
 
   // 循环字符串回调

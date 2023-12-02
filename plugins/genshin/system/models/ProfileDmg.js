@@ -1,19 +1,18 @@
-import fs from 'fs'
+import fs from 'node:fs'
 import lodash from 'lodash'
 import Base from './Base.js'
 import { Character } from './index.js'
-import { attrMap as attrMapGS } from '../resources/meta/artifact/index.js'
-import { attrMap as attrMapSR } from '../resources/meta-sr/artifact/index.js'
-import DmgBuffs from './profile/DmgBuffs.js'
-import DmgAttr from './profile/DmgAttr.js'
-import DmgCalc from './profile/DmgCalc.js'
-import { Common, MiaoError } from '#yunzai'
+import DmgBuffs from './dmg/DmgBuffs.js'
+import DmgAttr from './dmg/DmgAttr.js'
+import DmgCalc from './dmg/DmgCalc.js'
+import { MiaoError, Meta, Common } from '#yunzai'
 
 export default class ProfileDmg extends Base {
   constructor (profile = {}, game = 'gs') {
     super()
     this.profile = profile
     this.game = game
+    this._update = profile._update
     if (profile && profile.id) {
       let { id } = profile
       this.char = Character.get(id)
@@ -22,18 +21,19 @@ export default class ProfileDmg extends Base {
 
   static dmgRulePath (name, game = 'gs') {
     const _path = process.cwd()
-    const meta = game === 'sr' ? 'meta-sr' : 'meta'
-    let path = `${_path}/plugins/genshin/system/resources/${meta}/character/${name}/calc_user.js`
-    if (fs.existsSync(path)) {
-      return path
-    }
-    path = `${_path}/plugins/genshin/system/resources/${meta}/character/${name}/calc_auto.js`
-    if (fs.existsSync(path) && Common.cfg('teamCalc')) {
-      return path
-    }
-    path = `${_path}/plugins/genshin/system/resources/${meta}/character/${name}/calc.js`
-    if (fs.existsSync(path)) {
-      return path
+    let dmgFile = [
+      { file: 'calc_user', name: '自定义伤害' },
+      { file: 'calc_auto', name: '组团伤害', test: () => Common.cfg('teamCalc') },
+      { file: 'calc', name: '喵喵' }
+    ]
+    for (let ds of dmgFile) {
+      let path = `${_path}/system/resources/meta-${game}/character/${name}/${ds.file}.js`
+      if (ds.test && !ds.test()) {
+        continue
+      }
+      if (fs.existsSync(path)) {
+        return { path, createdBy: ds.name }
+      }
     }
     return false
   }
@@ -85,11 +85,19 @@ export default class ProfileDmg extends Base {
   }
 
   async getCalcRule () {
-    const cfgPath = ProfileDmg.dmgRulePath(this.char?.name, this.char?.game)
+    let ruleName = this.char?.name
+    if (['空', '荧'].includes(ruleName)) {
+      ruleName = `旅行者/${this.profile.elem}`
+    }
+    const cfgPath = ProfileDmg.dmgRulePath(ruleName, this.char?.game)
     let cfg = {}
     if (cfgPath) {
-      cfg = await import(`file://${cfgPath}`)
+      cfg = await import(`file://${cfgPath.path}`)
+      // 文件中定义了createBy的话，优先进行展示
+      let createdBy = cfg.createdBy || cfgPath.createdBy || '喵喵'
+      createdBy = createdBy.slice(0, 15)
       return {
+        createdBy,
         details: cfg.details || false, // 计算详情
         buffs: cfg.buffs || [], // 角色buff
         defParams: cfg.defParams || {}, // 默认参数，一般为空
@@ -114,11 +122,12 @@ export default class ProfileDmg extends Base {
     if (!charCalcData) {
       return false
     }
-    let { buffs, details, defParams, mainAttr, defDmgIdx, defDmgKey, enemyName } = charCalcData
+    let { createdBy, buffs, details, defParams, mainAttr, defDmgIdx, defDmgKey, enemyName } = charCalcData
 
     let talent = this.talent()
 
     let meta = {
+      level: profile.level,
       cons: profile.cons * 1,
       talent,
       trees: this.trees()
@@ -132,7 +141,7 @@ export default class ProfileDmg extends Base {
 
     buffs = this.getBuffs(buffs)
 
-    let { msg } = DmgAttr.calcAttr({ originalAttr, buffs, meta, params: defParams || {} })
+    let { msg } = DmgAttr.calcAttr({ originalAttr, buffs, meta, params: defParams || {}, game })
     let msgList = []
 
     let ret = []
@@ -167,7 +176,7 @@ export default class ProfileDmg extends Base {
         detail = detail({ ...ds, attr, profile })
       }
       let params = lodash.merge({}, defParams, detail?.params || {})
-      let { attr, msg } = DmgAttr.calcAttr({ originalAttr, buffs, meta, params, talent: detail.talent || '' })
+      let { attr, msg } = DmgAttr.calcAttr({ originalAttr, buffs, meta, params, talent: detail.talent || '', game })
       if (detail.isStatic) {
         return
       }
@@ -219,7 +228,7 @@ export default class ProfileDmg extends Base {
         attr: []
       }
 
-      let attrMap = game === 'gs' ? attrMapGS : attrMapSR
+      let { attrMap } = Meta.getMeta(game, 'arti')
 
       // 计算角色属性增减
       mainAttr = mainAttr.split(',')
@@ -268,7 +277,8 @@ export default class ProfileDmg extends Base {
       dmgRet,
       enemyName,
       dmgCfg: dmgDetail,
-      enemyLv
+      enemyLv,
+      createdBy
     }
   }
 }

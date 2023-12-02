@@ -3,26 +3,20 @@
 * */
 import lodash from 'lodash'
 import Base from './Base.js'
-import { abbr, artiMap, artiSetMap, calc as artisBuffs } from '../resources/meta/artifact/index.js'
-import { abbr as abbrSR, artiMap as artiMapSR, artisBuffs as artisBuffsSR, artiSetMap as artiSetMapSR } from '../resources/meta-sr/artifact/index.js'
+import { Meta } from '#yunzai'
 
 import { Artifact } from './index.js'
 
 class ArtifactSet extends Base {
-  constructor (name, game = 'gs') {
+  constructor (data, game = 'gs') {
     super()
+    if (!data) {
+      return false
+    }
+    let name = data.name
     let cache = this._getCache(`arti-set:${game}:${name}`)
     if (cache) {
       return cache
-    }
-    let data = (game === 'gs' ? artiSetMap : artiSetMapSR)[name]
-    if (!data) {
-      if (artiSetMapSR[name]) {
-        data = artiSetMapSR[name]
-        game = 'sr'
-      } else {
-        return false
-      }
     }
     this.game = game
     this.meta = data
@@ -30,30 +24,25 @@ class ArtifactSet extends Base {
   }
 
   get img () {
-    let arti = Artifact.get(this.sets[1] || this.sets[5], this.game)
+    let arti = Artifact.get(this.idxs[1] || this.idxs[5], this.game)
     return arti ? arti.img : ''
   }
 
-  get abbr () {
-    return this.game === 'gs' ? (abbr[this.name] || this.name) : (abbrSR[this.name] || this.name)
-  }
-
   static getByArti (name) {
-    if (artiMap[name]) {
-      return ArtifactSet.get(artiMap[name].set)
-    }
-    if (artiMapSR[name]) {
-      return ArtifactSet.get(artiMap[name].set, 'sr')
+    let arti = Artifact.get(name)
+    if (arti && arti.set) {
+      return ArtifactSet.get(arti.set)
     }
     return false
   }
 
-  static get (name) {
-    if (artiSetMap[name]) {
-      return new ArtifactSet(name, 'gs')
+  static get (name, game = 'gs') {
+    if (game === 'gs' && /^\d{5}$/.test(name)) {
+      name = name.toString().slice(0, 2)
     }
-    if (artiSetMapSR[name]) {
-      return new ArtifactSet(name, 'sr')
+    let data = Meta.matchGame(game, 'artiSet', name)
+    if (data) {
+      return new ArtifactSet(data.data, data.game)
     }
     return false
   }
@@ -67,19 +56,32 @@ class ArtifactSet extends Base {
   }
 
   static getArtisSetBuff (name, num, game = 'gs') {
-    let artiBuffsMap = game === 'sr' ? artisBuffsSR : artisBuffs
-    let ret = (artiBuffsMap[name] && artiBuffsMap[name][num]) || artiBuffsMap[name + num]
+    let { artiBuffs } = Meta.getMeta(game, 'arti')
+    let ret = (artiBuffs[name] && artiBuffs[name][num]) || artiBuffs[name + num]
     if (!ret) return false
     if (lodash.isPlainObject(ret)) return [ret]
     return ret
   }
 
+  // 循环圣遗物套装
+  static eachSet (idxs, fn, game = 'gs') {
+    lodash.forEach(idxs || [], (v, k) => {
+      let artisSet = ArtifactSet.get(k, game)
+      if (artisSet) {
+        if (v >= 4) {
+          fn(artisSet, 2)
+        }
+        fn(artisSet, v)
+      }
+    })
+  }
+
   getArtiName (idx = 1) {
-    return this.sets[idx]
+    return this.idxs[idx]
   }
 
   getArti (idx = 1) {
-    return Artifact.get(this.getArtiName(idx))
+    return Artifact.get(this.getArtiName(idx), this.game)
   }
 }
 

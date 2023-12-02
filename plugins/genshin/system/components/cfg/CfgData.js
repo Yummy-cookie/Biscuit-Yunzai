@@ -17,7 +17,7 @@ let cfgData = {
         ret.push(`export const ${cfgKey} = ${val.toString()}`, '')
       })
     })
-    fs.writeFileSync(`${process.cwd()}/plugins/genshin/system/config/cfg.js`, ret.join('\n'), 'utf8')
+    fs.writeFileSync(`${process.cwd()}/system/config/cfg.js`, ret.join('\n'), 'utf8')
   },
 
   async getCfg () {

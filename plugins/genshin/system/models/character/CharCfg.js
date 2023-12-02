@@ -1,8 +1,8 @@
 import { Data } from '#yunzai'
 import lodash from 'lodash'
-import fs from 'fs'
+import fs from 'node:fs'
 
-const charPath = process.cwd() + '/plugins/genshin/system/resources/meta/character'
+const charPath = process.cwd() + '/system/resources/meta-gs/character'
 let cfgMap = {
   char: {},
   async init () {
@@ -28,7 +28,7 @@ let cfgMap = {
     return fs.existsSync(`${charPath}/${char}/${file}.js`)
   },
   async getCfg (char, file, module = '') {
-    let cfg = await Data.importModule(`resources/meta/character/${char}/${file}.js`, 'miao')
+    let cfg = await Data.importModule(`resources/meta-gs/character/${char}/${file}.js`, 'miao')
     if (module) {
       return cfg[module]
     }
@@ -43,7 +43,7 @@ await cfgMap.init()
 let CharCfg = {
   // 获取角色伤害计算相关配置
   getCalcRule (char) {
-    let cfg = cfgMap.char[char.isTraveler ? '旅行者' : char.name]?.calc
+    let cfg = cfgMap.char[char.isTraveler ? `旅行者/${char.elem}` : char.name]?.calc
     if (!cfg || lodash.isEmpty(cfg)) {
       return false
     }

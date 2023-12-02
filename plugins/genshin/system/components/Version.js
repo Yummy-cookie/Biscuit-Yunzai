@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'node:fs'
 import lodash from 'lodash'
 import { Data } from '#yunzai'
 
@@ -78,19 +78,27 @@ const { changelogs, currentVersion } = readLogFile('miao')
 const yunzaiVersion = packageJson.version
 const isV3 = yunzaiVersion[0] === '3'
 let isMiao = false
-let name = "Yunzai-Bot"
+let name = 'Yunzai-Bot'
+let isAlemonjs = false
 if (packageJson.name === 'miao-yunzai') {
   isMiao = true
-  name = "Miao-Yunzai"
-} else if (packageJson.name === 'trss-yunzai') {
+  name = 'Miao-Yunzai'
+} else if (packageJson.name === 'yunzai') {
   isMiao = true
-  name = "TRSS-Yunzai"
+  name = 'Yunzai-Bot'
+} 
+else if (packageJson.name === 'a-yunzai') {
+  isMiao = true
+  name = 'A-Yunzai'
+  isAlemonjs = true
 }
+
 
 let Version = {
   isV3,
   isMiao,
   name,
+  isAlemonjs,
   get version () {
     return currentVersion
   },
