@@ -1,4 +1,4 @@
-[![云崽bot](https://img.shields.io/badge/%E4%BA%91%E5%B4%BD-v3.1.2-black?style=flat-square&logo=dependabot)](https://gitee.com/Yummy-cookie/Yunzai-Bot/) [![Group](https://img.shields.io/badge/群号-950817968-red?style=flat-square&logo=GroupMe&logoColor=white)](https://h5.qun.qq.com/s/hFFOCBqprO) <a href='https://gitee.com/Yummy-cookie/Yunzai-Bot/stargazers'><img src='https://gitee.com/Yummy-cookie/Yunzai-Bot/badge/star.svg?theme=dark' alt='star'></img></a>
+[![云崽bot](https://img.shields.io/badge/%E4%BA%91%E5%B4%BD-v3.1.2-black?style=flat-square&logo=dependabot)](https://gitee.com/Yummy-cookie/Yunzai-Bot/) [![Group](https://img.shields.io/badge/群号-758422167-red?style=flat-square&logo=GroupMe&logoColor=white)](https://h5.qun.qq.com/s/W0cWLjnVsY) <a href='https://gitee.com/Yummy-cookie/Yunzai-Bot/stargazers'><img src='https://gitee.com/Yummy-cookie/Yunzai-Bot/badge/star.svg?theme=dark' alt='star'></img></a>
 
 
 # Biscuit-Yunzai V3
@@ -8,7 +8,7 @@ Yunzai-Bot，原神qq群机器人，通过米游社接口，查询原神游戏�
 
 [目前功能](https://gitee.com/Yummy-cookie/Yunzai-Bot/blob/master/plugins/genshin/README.md)
 
-[加入聊天群①](https://h5.qun.qq.com/s/hFFOCBqprO)
+[加入聊天群①](https://h5.qun.qq.com/s/W0cWLjnVsY)
 
 ## 使用方法
 >环境准备： Windows or Linux，Node.js（[版本至少v16以上](http://nodejs.cn/download/)），[Redis](https://redis.io/docs/getting-started/installation/)
