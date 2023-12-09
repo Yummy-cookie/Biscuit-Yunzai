@@ -63,5 +63,5 @@ node ./node_modules/puppeteer/install.js
 ## 其他
 - 图片素材来源于网络，仅供交流学习使用
 - 严禁用于任何商业用途和非法行为
-- 赞助[点我跳转](resources/img/qr.png)(记得备注自己)
+- 赞助[点我跳转](plugins/genshin/resources/img/qr.png)(记得备注自己)
 
