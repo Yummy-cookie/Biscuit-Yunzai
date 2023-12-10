@@ -130,10 +130,10 @@ export default class apiTool {
           url: `https://public-data-api.mihoyo.com/device-fp/api/getFp`,
           body: {
             seed_id: data.seed_id,
-            device_id: data.deviceId,
+            device_id: data.deviceId.toUpperCase(),
             platform: '1',
             seed_time: new Date().getTime() + '',
-            ext_fields: '{"proxyStatus":"0","accelerometer":"-0.159515x-0.830887x-0.682495","ramCapacity":"3746","IDFV":"8F4E403B-4C28-4F7F-B740-2DD317948B8A","gyroscope":"-0.191951x-0.112927x0.632637","isJailBreak":"0","model":"iPhone12,5","ramRemain":"115","chargeStatus":"1","networkType":"WIFI","vendor":"--","osVersion":"17.0.2","batteryStatus":"50","screenSize":"414×896","cpuCores":"6","appMemory":"55","romCapacity":"488153","romRemain":"157348","cpuType":"CPU_TYPE_ARM64","magnetometer":"-84.426331x-89.708435x-37.117889"}',
+            ext_fields: `{"proxyStatus":"0","accelerometer":"-0.159515x-0.830887x-0.682495","ramCapacity":"3746","IDFV":"${data.deviceId.toUpperCase()}","gyroscope":"-0.191951x-0.112927x0.632637","isJailBreak":"0","model":"iPhone12,5","ramRemain":"115","chargeStatus":"1","networkType":"WIFI","vendor":"--","osVersion":"17.0.2","batteryStatus":"50","screenSize":"414×896","cpuCores":"6","appMemory":"55","romCapacity":"488153","romRemain":"157348","cpuType":"CPU_TYPE_ARM64","magnetometer":"-84.426331x-89.708435x-37.117889"}`,
             app_name: 'bbs_cn',
             device_fp: '38d7ee834d1e9'
           },
@@ -174,7 +174,7 @@ export default class apiTool {
             app_name: 'bbs_cn',
             device_fp: '38d7ee834d1e9'
           },
-              /** 签到信息 */
+          /** 签到信息 */
                 bbs_sign_info: {
                     url: `${host}event/luna/info`,
                     query: `act_id=e202304121516551&region=${this.server}&uid=${this.uid}`,
@@ -191,7 +191,7 @@ export default class apiTool {
                     url: `${host}event/luna/sign`,
                     body: { act_id:'e202304121516551', region: this.server, uid: this.uid },
                     sign: true
-                    },
+               },
         },
         /**
          * 开拓阅历接口
@@ -225,7 +225,7 @@ export default class apiTool {
     }
 
     if (this.server.startsWith('os')) {
-      urlMap.genshin.bbs_sign_info.url = 'https://hk4e-api-os.hoyoverse.com/event/sol/info'
+    urlMap.genshin.bbs_sign_info.url = 'https://hk4e-api-os.hoyoverse.com/event/sol/info'
             urlMap.genshin.bbs_sign_info.query = `act_id=e202102251931481&region=${this.server}&uid=${this.uid}`
             urlMap.genshin.bbs_sign_home.url = 'https://hk4e-api-os.hoyoverse.com/event/sol/home'
             urlMap.genshin.bbs_sign_home.query = `act_id=e202102251931481&region=${this.server}&uid=${this.uid}`
@@ -245,7 +245,7 @@ export default class apiTool {
       urlMap.genshin.useCdk.url = 'https://sg-hk4e-api.hoyoverse.com/common/apicdkey/api/webExchangeCdkey'
       urlMap.genshin.useCdk.query = `uid=${this.uid}&region=${this.server}&lang=zh-cn&cdkey=${data.cdk}&game_biz=hk4e_global`
     }
-      if(this.isSr&&this.server.includes('official')){
+       if(this.isSr&&this.server.includes('official')){
             urlMap.honkaisr.bbs_sign.url=`https://sg-public-api.hoyolab.com/event/luna/os/sign`
             urlMap.honkaisr.bbs_sign.body = { act_id: 'e202303301540311', lang: "zh-cn" }
             urlMap.honkaisr.bbs_sign_home.url=`https://sg-public-api.hoyolab.com/event/luna/os/home`
