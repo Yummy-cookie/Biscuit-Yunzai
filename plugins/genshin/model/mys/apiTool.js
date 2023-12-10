@@ -104,19 +104,19 @@ export default class apiTool {
         },
         /** 签到信息 */
                 bbs_sign_info: {
-                    url: `${host}event/bbs_sign_reward/info`,
+                    url: `${host}event/luna/info`,
                     query: `act_id=e202311201442471&region=${this.server}&uid=${this.uid}`,
                     sign: true
                 },
                 /** 签到奖励 */
                 bbs_sign_home: {
-                    url: `${host}event/bbs_sign_reward/home`,
+                    url: `${host}event/luna/home`,
                     query: `act_id=e202311201442471&region=${this.server}&uid=${this.uid}`,
                     sign: true
                 },
                 /** 签到 */
                 bbs_sign: {
-                    url: `${host}event/bbs_sign_reward/sign`,
+                    url: `${host}event/luna/sign`,
                     body: { act_id: 'e202311201442471', region: this.server, uid: this.uid },
                     sign: true
                     },
@@ -246,11 +246,11 @@ export default class apiTool {
     }
 
     if (this.server.startsWith('os')) {
-      urlMap.genshin.bbs_sign_info.url = 'https://hk4e-api-os.hoyoverse.com/event/sol/info'
+      urlMap.genshin.bbs_sign_info.url = 'https://sg-public-api.hoyolab.com/event/luna/os/info'
             urlMap.genshin.bbs_sign_info.query = `act_id=e202311201442471&region=${this.server}&uid=${this.uid}`
-            urlMap.genshin.bbs_sign_home.url = 'https://hk4e-api-os.hoyoverse.com/event/sol/home'
+            urlMap.genshin.bbs_sign_home.url = 'https://sg-public-api.hoyolab.com/event/luna/os/home'
             urlMap.genshin.bbs_sign_home.query = `act_id=e202311201442471&region=${this.server}&uid=${this.uid}`
-            urlMap.genshin.bbs_sign.url = 'https://hk4e-api-os.hoyoverse.com/event/sol/sign'
+            urlMap.genshin.bbs_sign.url = 'https://sg-public-api.hoyolab.com/event/luna/os/sign'
             urlMap.genshin.bbs_sign.body = { act_id: 'e202311201442471', region: this.server, uid: this.uid }
       urlMap.genshin.detail.url = 'https://sg-public-api.hoyolab.com/event/calculateos/sync/avatar/detail'// 角色天赋详情
       urlMap.genshin.detail.query = `lang=zh-cn&uid=${this.uid}&region=${this.server}&avatar_id=${data.avatar_id}`
