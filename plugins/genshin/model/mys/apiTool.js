@@ -240,7 +240,6 @@ export default class apiTool {
         verifyVerification: {
           url: 'https://bbs-api.mihoyo.com/misc/api/verifyVerification',
           body: data
-        }
       }
     }
 
