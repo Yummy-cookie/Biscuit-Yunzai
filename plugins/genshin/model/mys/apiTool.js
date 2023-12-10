@@ -105,19 +105,19 @@ export default class apiTool {
         /** 签到信息 */
                 bbs_sign_info: {
                     url: `${host}event/luna/info`,
-                    query: `act_id=e202311201442471&region=${this.server}&uid=${this.uid}`,
+                    query: `act_id=e202311201442471&region=${this.server}&uid=${this.uid}&lang=zh-cn`,
                     sign: true
                 },
                 /** 签到奖励 */
                 bbs_sign_home: {
                     url: `${host}event/luna/home`,
-                    query: `act_id=e202311201442471&region=${this.server}&uid=${this.uid}`,
+                    query: `act_id=e202311201442471&region=${this.server}&uid=${this.uid}&lang=zh-cn`,
                     sign: true
                 },
                 /** 签到 */
                 bbs_sign: {
                     url: `${host}event/luna/sign`,
-                    body: { act_id: 'e202311201442471', region: this.server, uid: this.uid },
+                    body: { act_id: 'e202311201442471', region: this.server, uid: this.uid, lang: 'zh-cn' },
                     sign: true
                     },
         /**使用兑换码 目前仅限国际服,来自于国服的uid请求已在myinfo.js的init方法提前拦截 */
@@ -187,19 +187,19 @@ export default class apiTool {
               /** 签到信息 */
                 bbs_sign_info: {
                     url: `${host}event/luna/info`,
-                    query: `act_id=e202304121516551&region=${this.server}&uid=${this.uid}`,
+                    query: `act_id=e202304121516551&region=${this.server}&uid=${this.uid}&lang=zh-cn`,
                     sign: true
                 },
                 /** 签到奖励 */
                 bbs_sign_home: {
                     url: `${host}event/luna/home`,
-                    query: `act_id=e202304121516551&region=${this.server}&uid=${this.uid}`,
+                    query: `act_id=e202304121516551&region=${this.server}&uid=${this.uid}&lang=zh-cn`,
                     sign: true
                 },
                 /** 签到 */
                 bbs_sign: {
                     url: `${host}event/luna/sign`,
-                    body: { act_id:'e202304121516551', region: this.server, uid: this.uid },
+                    body: { act_id:'e202304121516551', region: this.server, uid: this.uid, lang: 'zh-cn' },
                     sign: true
                     },
         },
