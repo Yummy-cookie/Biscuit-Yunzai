@@ -190,11 +190,11 @@ export default class MysApi {
   }
 
  /** 签到ds */
-  getDsSign() {
+  getDsSign () {
     /** @Womsxd */
     const n = 'jEpJb9rRARU2rXDA9qYbZ3selxkuct9a'
     const t = Math.round(new Date().getTime() / 1000)
-    const r = lodash.sampleSize('abcdefghijklmnopqrstuvwxyz0123456789', 6).join('')
+    const r = lodash.sampleSize('abcdefghijklmnopqrstuvwxyz0107607077', 6).join('')
     const DS = md5(`salt=${n}&t=${t}&r=${r}`)
     return `${t},${r},${DS}`
   }
