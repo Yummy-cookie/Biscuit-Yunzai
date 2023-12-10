@@ -207,7 +207,7 @@ export default class MysInfo {
 
       for (let i in res) {
         res[i] = await mysInfo.checkCode(res[i], res[i].api)
-        if (res[i] === 'repeat' && !option.isVerify) {
+        if (res[i] === 'repeat') {
           return await MysInfo.get(e, api, data, { isVerify: !0, ...option })
         }
         if (res[i]?.retcode === 0) continue
