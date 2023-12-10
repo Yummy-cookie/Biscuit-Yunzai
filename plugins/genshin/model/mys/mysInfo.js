@@ -1,6 +1,7 @@
 import MysApi from './mysApi.js'
 import GsCfg from '../gsCfg.js'
 import lodash from 'lodash'
+import fetch from 'node-fetch'
 import NoteUser from './NoteUser.js'
 import MysUser from './MysUser.js'
 import DailyCache from './DailyCache.js'
@@ -206,7 +207,10 @@ export default class MysInfo {
 
       for (let i in res) {
         res[i] = await mysInfo.checkCode(res[i], res[i].api)
-
+if (res[i] === 'repeat' && !option.isVerify) {
+          return await MysInfo.get(e, api, data, { isVerify: !0, ...option })
+        }     
+        
         if (res[i]?.retcode === 0) continue
 
         break
@@ -214,6 +218,9 @@ export default class MysInfo {
     } else {
       res = await mysApi.getData(api, data)
       res = await mysInfo.checkCode(res, api)
+      if (res === 'repeat') {
+        res = await mysApi.getData(api, data)
+      }
     }
 
     return res
@@ -378,20 +385,13 @@ export default class MysInfo {
       case -1002:
         if (res.api === 'detail') res.retcode = 0
         break
-      case 5003:
       case 1034:
-        let handler = this.e.runtime?.handler || {}
-
-        // 如果有注册的mys.req.err，调用
-        if (handler.has('mys.req.err')) {
-          logger.mark(`[米游社查询][uid:${this.uid}][qq:${this.userId}] 遇到验证码，尝试调用 Handler mys.req.err`)
-          res = await handler.call('mys.req.err', this.e, { mysApi, type, res, data, mysInfo: this }) || res
+      case 5003:
+        if (await this.bbsVerification()) {
+          return 'repeat'
         }
-
-        if (!res || res?.retcode == 1034) {
-          logger.mark(`[米游社查询失败][uid:${this.uid}][qq:${this.userId}] 遇到验证码`)
-          if (!isTask) this.e.reply('米游社查询遇到验证码，请稍后再试')
-        }
+        logger.mark(`[米游社查询失败][uid:${this.uid}][qq:${this.userId}] 遇到验证码`)
+        if (!isTask) this.e.reply('米游社查询遇到验证码，请稍后再试')
         break
       default:
         if (!isTask) this.e.reply(`米游社接口报错，暂时无法查询：${res.message || 'error'}`)
@@ -403,6 +403,47 @@ export default class MysInfo {
     // 添加请求记录
     if (!isTask) await this.ckUser.addQueryUid(this.uid)
     return res
+  }
+
+  /** 刷新米游社验证 */
+  async bbsVerification () {
+    let create = await MysInfo.get(this.e, 'createVerification')
+    if (!create || create.retcode !== 0) return false
+
+    let verify = await MysInfo.verify(this.e, { uid: this.uid || this.e?.uid, ...create.data })
+    if (!verify) return false
+
+    let submit = await MysInfo.get(this.e, 'verifyVerification', verify)
+    if (!submit || submit.retcode !== 0) return false
+
+    return true
+  }
+
+  /** 手动验证 */
+  static async verify (e, data) {
+    if (!data.gt || !data.challenge || !e?.reply) return false
+    let cfg = { ...GsCfg.getdefSet('mys', 'set'), ...GsCfg.getYaml('mys', 'set', 'config') }
+    if (!cfg.verify || !cfg.verifyAddr) return false
+
+    let res = await fetch(cfg.verifyAddr, {
+      method: 'post',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    res = await res.json()
+    if (!res.data) return false
+
+    await e.reply(`请打开地址并完成验证\n${res.data.link}`, true)
+    for (let i = 0; i < 60; i++) {
+      let validate = await fetch(res.data.result)
+      validate = await validate.json()
+      if (validate.data) {
+        logger.mark(`[米游社验证成功][uid:${e.uid || data.uid}][qq:${e.user_id}]`)
+        return validate.data
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+    }
+    return false
   }
   
   /** 删除失效ck */

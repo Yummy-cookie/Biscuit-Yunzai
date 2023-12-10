@@ -136,7 +136,17 @@ export default class apiTool {
             ext_fields: '{"proxyStatus":"0","accelerometer":"-0.159515x-0.830887x-0.682495","ramCapacity":"3746","IDFV":"8F4E403B-4C28-4F7F-B740-2DD317948B8A","gyroscope":"-0.191951x-0.112927x0.632637","isJailBreak":"0","model":"iPhone12,5","ramRemain":"115","chargeStatus":"1","networkType":"WIFI","vendor":"--","osVersion":"17.0.2","batteryStatus":"50","screenSize":"414×896","cpuCores":"6","appMemory":"55","romCapacity":"488153","romRemain":"157348","cpuType":"CPU_TYPE_ARM64","magnetometer":"-84.426331x-89.708435x-37.117889"}',
             app_name: 'bbs_cn',
             device_fp: '38d7ee834d1e9'
-          },
+          }
+        },
+        /** 米游社验证 */
+        createVerification: {
+          url: `${hostRecord}game_record/app/card/wapi/createVerification`,
+          query: 'is_high=true'
+        },
+        /** 米游社验证 */
+        verifyVerification: {
+          url: `${hostRecord}game_record/app/card/wapi/verifyVerification`,
+          body: data
         }
       },
       honkaisr: {
@@ -220,6 +230,17 @@ export default class apiTool {
         detail: {
           url: `${host}event/rpgcalc/avatar/detail`,
           query: `game=hkrpg&lang=zh-cn&item_id=${data.avatar_id}&tab_from=${data.tab_from}&change_target_level=0&uid=${this.uid}&region=${this.server}`
+          },
+        /** 米游社验证 */
+        createVerification: {
+          url: 'https://bbs-api.mihoyo.com/misc/api/createVerification',
+          query: 'is_high=true',
+          sign: true
+        },
+        /** 米游社验证 */
+        verifyVerification: {
+          url: 'https://bbs-api.mihoyo.com/misc/api/verifyVerification',
+          body: data
         }
       }
     }
