@@ -128,68 +128,35 @@ export default class MysApi {
   }
 
   getHeaders (query = '', body = '', sign = false) {
-    const cn = {
-      app_version: '2.40.1',
-      User_Agent: `Mozilla/5.0 (Linux; Android 12; ${this.device}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.73 Mobile Safari/537.36 miHoYoBBS/2.40.1`,
-      client_type: 5,
+    let headers = {
+      'x-rpc-device_id': this.option.device_id || this.getGuid(),
+      'x-rpc-app_version': '2.40.1',
+      'x-rpc-client_type': 5,
+      'User-Agent': `Mozilla/5.0 (Linux; Android 12; ${this.device}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.73 Mobile Safari/537.36 miHoYoBBS/2.40.1`,
+      'X-Requested-With': 'com.mihoyo.hyperion',
       Origin: 'https://webstatic.mihoyo.com',
-      X_Requested_With: 'com.mihoyo.hyperion',
-      Referer: 'https://webstatic.mihoyo.com'
-    }
-    const os = {
-      app_version: '2.9.0',
-      User_Agent: `Mozilla/5.0 (Linux; Android 12; ${this.device}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.73 Mobile Safari/537.36 miHoYoBBSOversea/2.9.0`,
-      client_type: '2',
-      Origin: 'https://webstatic-sea.hoyolab.com',
-      X_Requested_With: 'com.mihoyo.hoyolab',
-      Referer: 'https://webstatic-sea.hoyolab.com'
-    }
-    let client
-    if (this.server.startsWith('os')) {
-      client = os
-    } else {
-      client = cn
-    }
-    if (sign) {
-      return {
-        'x-rpc-app_version': client.app_version,
-        'x-rpc-client_type': client.client_type,
-        'x-rpc-device_id': this.option.device_id || this.getGuid(),
-        'User-Agent': client.User_Agent,
-        'X-Requested-With': client.X_Requested_With,
-        'x-rpc-platform': 'android',
-        'x-rpc-device_model': this.device,
-        'x-rpc-device_name': this.device,
-        'x-rpc-channel': 'miyousheluodi',
-        'x-rpc-sys_version': '6.0.1',
-        Referer: client.Referer,
-        DS: this.getDsSign()
-      }
-    }
-    return {
-      'x-rpc-app_version': client.app_version,
-      'x-rpc-client_type': client.client_type,
-      'User-Agent': client.User_Agent,
-      Referer: client.Referer,
+      Referer: 'https://webstatic.mihoyo.com',
       DS: this.getDs(query, body)
     }
+    if (sign) {
+      if (!this.isSr) headers['x-rpc-signgame'] = 'hk4e'
+      headers.Origin = 'https://act.mihoyo.com'
+      headers.Referer = 'https://act.mihoyo.com'
+      headers.DS = this.getDsSign()
+    }
+    return headers
   }
 
 
-  getDs (q = '', b = '') {
-    let n = ''
-    if (['cn_gf01', 'cn_qd01', 'prod_gf_cn', 'prod_qd_cn'].includes(this.server)) {
-      n = 'xV8v4Qu54lUKrEYFZkJhB8cuOh9Asafs'
-    } else if (/os_|official/.test(this.server)) {
-      n = 'okr4obncj8bw5a65hbnn5oo6ixjc3l9w'
-    }
+ getDs (q = '', b = '') {
+    let n = 'xV8v4Qu54lUKrEYFZkJhB8cuOh9Asafs'
     let t = Math.round(new Date().getTime() / 1000)
     let r = Math.floor(Math.random() * 900000 + 100000)
     let DS = md5(`salt=${n}&t=${t}&r=${r}&b=${b}&q=${q}`)
     return `${t},${r},${DS}`
   }
 
- /** 签到ds */
+  /** 签到ds */
   getDsSign () {
     /** @Womsxd */
     const n = 'jEpJb9rRARU2rXDA9qYbZ3selxkuct9a'
@@ -203,9 +170,9 @@ export default class MysApi {
     function S4 () {
       return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
     }
-
     return (S4() + S4() + '-' + S4() + '-' + S4() + '-' + S4() + '-' + S4() + S4() + S4())
   }
+
 
   cacheKey (type, data) {
     return 'Yz:genshin:mys:cache:' + md5(this.uid + type + JSON.stringify(data))
