@@ -11,24 +11,28 @@ let xlsx = {}
 export default class ExportLog extends base {
   constructor (e) {
     super(e)
-    this.model = 'gachaLog'
-
-    this.urlKey = `${this.prefix}url:`
+   this.urlKey = `${this.prefix}url:`
     /** 绑定的uid */
     this.uidKey = `Yz:genshin:mys:qq-uid:${this.userId}`
 
     this.path = `./data/gachaJson/${this.e.user_id}/`
 
     this.pool = [
-      { type: 301, typeName: '角色活动' },
-      { type: 302, typeName: '武器活动' },
+      { type: 301, typeName: '角色' },
+      { type: 302, typeName: '武器' },
       { type: 200, typeName: '常驻' }
     ]
+    if (e.isSr) {
+      /** 绑定的uid */
+      this.uidKey = `Yz:srJson:mys:qq-uid:${this.userId}`
 
-    this.typeName = {
-      301: '角色',
-      302: '武器',
-      200: '常驻'
+      this.path = `./data/srJson/${this.e.user_id}/`
+      this.pool = [
+        { type: 11, typeName: '角色' },
+        { type: 12, typeName: '光锥' },
+        { type: 1, typeName: '常驻' },
+        { type: 2, typeName: '新手' }
+      ]
     }
   }
 
