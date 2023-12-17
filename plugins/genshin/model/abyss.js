@@ -2,6 +2,7 @@ import moment from 'moment'
 import lodash from 'lodash'
 import base from './base.js'
 import MysInfo from './mys/mysInfo.js'
+import gsCfg from './gsCfg.js'
 
 export default class Abyss extends base {
   constructor (e) {
@@ -204,9 +205,8 @@ export default class Abyss extends base {
 
       for (let i in val.battles) {
         for (let j in val.battles[i].avatars) {
-          let char = Character.get(val.battles[i].avatars[j].id)
-          val.battles[i].avatars[j].name = char.abbr
-          val.battles[i].avatars[j].icon = char.face
+          val.battles[i].avatars[j].name = roleArr[val.battles[i].avatars[j].id].name
+          val.battles[i].avatars[j].name = gsCfg.roleIdToName(val.battles[i].avatars[j].id)
           val.battles[i].avatars[j].life = roleArr[val.battles[i].avatars[j].id].actived_constellation_num
         }
       }
