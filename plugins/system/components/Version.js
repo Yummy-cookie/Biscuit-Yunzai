@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import lodash from 'lodash'
 import { Data } from '#yunzai'
-import cfg from '../../lib/config/config.js'
+import cfg from '../../../lib/config/config.js'
 
 let packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 
