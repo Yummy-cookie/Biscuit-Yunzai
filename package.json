@@ -51,6 +51,6 @@
     },
   "imports": {
     "#yunzai": "./plugins/genshin/system/components/index.js",
-    "#yunzai.models": ".plugins/genshin/system/models/index.js"
+    "#yunzai.models": "./plugins/genshin/system/models/index.js"
   }
 }
