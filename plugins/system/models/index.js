@@ -15,7 +15,7 @@ import MysApi from './MysApi.js'
 
 for (let game of ['gs', 'sr']) {
   for (let type of ['artifact', 'character', 'material', 'weapon']) {
-    let file = `./system/resources/meta-${game}/${type}/index.js`
+    let file = `./plugins/system/resources/meta-${game}/${type}/index.js`
     if (fs.existsSync(file)) {
       try {
         await import(`file://${process.cwd()}/${file}`)
