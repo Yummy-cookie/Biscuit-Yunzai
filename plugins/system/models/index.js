@@ -1,5 +1,4 @@
-import fs from 'node:fs'
-
+import fs from "node:fs"
 import Base from './Base.js'
 import Character from './Character.js'
 import Artifact from './Artifact.js'
@@ -16,7 +15,7 @@ import MysApi from './MysApi.js'
 
 for (let game of ['gs', 'sr']) {
   for (let type of ['artifact', 'character', 'material', 'weapon']) {
-    let file = `./plugins/genshin/system/resources/meta-${game}/${type}/index.js`
+    let file = `./system/resources/meta-${game}/${type}/index.js`
     if (fs.existsSync(file)) {
       try {
         await import(`file://${process.cwd()}/${file}`)

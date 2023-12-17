@@ -31,7 +31,7 @@ class App {
     let cls = class extends Plugin {
       constructor () {
         super({
-          name: `喵喵:${cfg.name || cfg.id}`,
+          name: `云崽:${cfg.name || cfg.id}`,
           dsc: cfg.desc || cfg.name || '喵喵插件',
           event: event === 'poke' ? 'notice.*.poke' : 'message',
           priority: cfg.priority || 50,

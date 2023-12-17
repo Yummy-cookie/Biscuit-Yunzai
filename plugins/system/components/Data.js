@@ -9,7 +9,7 @@ const getRoot = (root = '') => {
   } else if (root === 'root' || root === 'yunzai') {
     root = `${_path}/`
   } else if (root === 'miao') {
-    root = `${_path}/plugins/genshin</`
+    root = `${_path}/system/`
   } else {
     root = `${_path}/plugins/${root}/`
   }
