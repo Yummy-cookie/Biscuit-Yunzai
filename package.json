@@ -50,7 +50,7 @@
     "express-art-template": "^1.0.1"
     },
   "imports": {
-    "#yunzai": "./plugins/system/components/index.js",
-    "#yunzai.models": "./plugins/system/models/index.js"
+    "#yunzai": "./plugins/genshin/system/components/index.js",
+    "#yunzai.models": ".plugins/genshin/system/models/index.js"
   }
 }

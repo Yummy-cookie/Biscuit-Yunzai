@@ -4,7 +4,7 @@ import cfgData from './cfg/CfgData.js'
 import { Version } from '#yunzai'
 
 const _path = process.cwd()
-const _cfgPath = `${_path}/plugins/system/components/`
+const _cfgPath = `${_path}/system/components/`
 let cfg = {}
 let miaoCfg = {}
 

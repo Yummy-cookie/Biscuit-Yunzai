@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import lodash from 'lodash'
 import { Data } from '#yunzai'
-import cfg from '../../../lib/config/config.js'
 
 let packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 
@@ -16,8 +15,8 @@ const getLine = function (line) {
 }
 
 const readLogFile = function (root, versionCount = 4) {
-  root = '../..'
-  let logPath = `${process.cwd()}/CHANGELOG.md`
+  root = Data.getRoot(root)
+  let logPath = `${root}/CHANGELOG.md`
   let logs = {}
   let changelogs = []
   let currentVersion
@@ -79,8 +78,20 @@ const { changelogs, currentVersion } = readLogFile('miao')
 const yunzaiVersion = packageJson.version
 const isV3 = yunzaiVersion[0] === '3'
 let isMiao = false
-let name = cfg.debug.info.name
+let name = 'Yunzai-Bot'
 let isAlemonjs = false
+if (packageJson.name === 'miao-yunzai') {
+  isMiao = true
+  name = 'Miao-Yunzai'
+} else if (packageJson.name === 'yunzai') {
+  isMiao = true
+  name = 'Yunzai-Bot'
+} 
+else if (packageJson.name === 'a-yunzai') {
+  isMiao = true
+  name = 'A-Yunzai'
+  isAlemonjs = true
+}
 
 
 let Version = {
