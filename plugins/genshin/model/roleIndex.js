@@ -4,7 +4,6 @@ import gsCfg from './gsCfg.js'
 import lodash from 'lodash'
 import moment from 'moment'
 import fs from 'node:fs'
-import { Character } from '#miao.models'
 
 let dsz = '待实装'
 let imgFile = {}
@@ -414,8 +413,7 @@ export default class RoleIndex extends base {
         avatars[i].name = '荧'
       }
       avatars[i].element = element[avatars[i].name]
-      let char = Character.get(avatars[i].name)
-      avatars[i].img = char.imgs?.gacha
+      avatars[i].img = imgFile[avatars[i].name] || `${avatars[i].name}.png`
     }
 
     return {
