@@ -397,6 +397,13 @@ if (res[i] === 'repeat' && !option.isVerify) {
         if (!isTask) this.e.reply(`米游社接口报错，暂时无法查询：${res.message || 'error'}`)
         break
     }
+    case 10307:
+        if (!isTask) this.e.reply(['版本更新期间，数据维护中', this.mysButton])
+        break
+      default:
+        if (!isTask) this.e.reply([`米游社接口报错，暂时无法查询：${res.message || 'error'}`, this.mysButton])
+        break
+    }
     if (res.retcode !== 0) {
       logger.mark(`[mys接口报错]${JSON.stringify(res)}，uid：${this.uid}`)
     }
