@@ -372,6 +372,13 @@ if (res[i] === 'repeat' && !option.isVerify) {
         if (!isTask) {
           await this.disableToday()
           this.e.reply('查询已达今日上限')
+          }
+        break
+      case 10307:
+        if (!isTask) this.e.reply('版本更新期间，数据维护中')
+        break
+      default:
+        if (!isTask) this.e.reply(`米游社接口报错，暂时无法查询：${res.message || 'error'}`)
         }
         break
       case 10102:
